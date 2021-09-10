@@ -25,6 +25,68 @@ function randNum (min, max) {
 }
 
 
+// mouse event variables
+var mousePosition = {
+	x: 0,
+	y: 0
+};
+var mouseLeftPressed = false;
+var mouseRightPressed = false;
+var mouseLeftClickCount = false;
+var mouseRightClickCount = false;
+
+
+
+canvas.addEventListener('mousemove', function (event) {
+
+	var rect = canvas.getBoundingClientRect();
+
+	mousePosition.x = (event.offsetX || event.layerX);
+	mousePosition.y = (event.offsetY || event.layerY);
+
+  
+
+	game.mouseMoveEvent({ x: event.clientX, y: event.clientY });
+
+});
+
+canvas.addEventListener('mousedown', function (event) {
+
+	var e = e || window.event;
+	var btnCode;
+
+	if ('object' === typeof e) {
+		btnCode = e.button;
+		switch (btnCode) {
+			case 0:
+				mouseLeftPressed = true;
+        game.mouseClickLeftEvent({ x: event.clientX, y: event.clientY });
+				break;
+			case 1: console.log('Middle'); 	break;
+			case 2:
+				mouseRightPressed = true;
+        game.mouseClickRightEvent({ x: event.clientX, y: event.clientY });
+				break;
+		}
+	}
+});
+
+canvas.addEventListener('mouseup', function (event) {
+	mouseLeftPressed = false;
+	mouseRightPressed = false;
+	game.mouseUpEvent({ x: event.clientX, y: event.clientY });
+});
+
+
+
+
+
+canvas.addEventListener('contextmenu', function (event) {
+	event.preventDefault();
+	event.stopPropagation();
+	return false;
+});
+
 function getMousePos(canvas, evt) {
   var rect = canvas.getBoundingClientRect();
   return {
@@ -94,6 +156,7 @@ function onkeydown(evt) {
 	if (code == KEY.S || code == KEY.DOWN) input.down = true;
 
 	if (code == KEY.ESPACE) input.espace = true;
+	if (code == KEY.ENTER) input.enter = true;
   if (code == KEY.F ) input.refuel = true;
 
   // Once
@@ -116,6 +179,7 @@ function onkeyup(evt) {
 
 
 	if (code == KEY.ESPACE ) { input.espace = false; }
+	if (code == KEY.ENTER) input.enter = false;
   if (code == KEY.F ) input.refuel = false;
 
   if (code == KEY.N ) input.new = input.state.RELEASED;

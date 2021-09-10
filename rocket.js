@@ -36,7 +36,7 @@ class Rocket {
         this.thrust = { x: 0, y: 0 };
         this.thrusting = false;
 
-        this.fuel_MAX = 1000;
+        this.fuel_MAX = 1200;
         this.fuel = this.fuel_MAX * 2 / 3;
         this.grounded = true;
         this.canFuel = false;

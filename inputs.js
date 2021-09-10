@@ -11,7 +11,8 @@ var KEY = {
 	LEFT: 37,
 	DOWN: 40,
 	Q: 81,
-	ESPACE: 32
+	ESPACE: 32,
+	ENTER: 13
 };
 
 var inputState = {RELEASED:0,ACTIVE:1,INACTIVE:2}
@@ -22,6 +23,7 @@ var input = {
 	left: false,
 	down: false,
 	espace: false,
+	enter: false,
 	shoot: false,
 	refuel: false,
 	new: false,

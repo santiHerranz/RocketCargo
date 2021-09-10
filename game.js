@@ -6,6 +6,8 @@ class Game {
 
         this.screen = new Screen(window.innerWidth * 1, window.innerHeight * 1, ctx);
 
+
+
         this.stop = false;
         this.dt = 10 / 100;
 
@@ -22,56 +24,48 @@ class Game {
         this.lastRocketY = 0;
 
 
-
         this.autorespawn = true;
         this.respawnPosition = { x: cWidth * 1 / 2, y: groundPoint };
 
         this.relativePos = this.respawnPosition;
 
-        this.bases.push(new Base("A", 1000, groundPoint));
-        this.bases.push(new Base("B", 5000, groundPoint));
-        this.bases.push(new Base("C", 10000, groundPoint));
-        this.bases.push(new Base("D", 15000, groundPoint));
-        this.bases.push(new Base("E", 30000, groundPoint));
+        this.bases.push(new Base("A", this.relativePos.x, groundPoint));
+        this.bases.push(new Base("B", this.relativePos.x+1000, groundPoint));
+        this.bases.push(new Base("C", this.relativePos.x+2000, groundPoint));
+        this.bases.push(new Base("D", this.relativePos.x+3000, groundPoint));
+        this.bases.push(new Base("E", this.relativePos.x+4000, groundPoint));
+
+
+        this.indexMission = 0;
+        this.missions = [];
+        this.missions.push({ path: ["A", "C"], description: " to carry customer payloads" });
+        this.missions.push({ path: ["C", "B"], description: " to carry customer payloads" });
+        this.missions.push({ path: ["B", "D"], description: " to carry customer payloads" });
+        this.missions.push({ path: ["D", "A"], description: " to carry customer payloads" });
+        this.currentMission = this.missions[this.indexMission];
 
         this.newRocket(this.respawnPosition);
+
 
     }
 
     interpolate(b, e, i) {
-        return b + ((i/0.99999) * (e-b));
+        return b + ((i / 0.99999) * (e - b));
     }
 
     step(dt) {
-
-        
-        // Vertical Zoom with logic, no frustrum view
-        let altitudePercent = (1 -this.currentRocket.altitude/this.currentRocket.altitudeMax);
-
-        this.screen.scaleY  = this.interpolate(0.45, 1.0, altitudePercent);
-        this.screen.screenOffsetY = this.interpolate(900, -100, altitudePercent);         
-
-        this.screen.scaleX = this.screen.scaleY;
-        this.screen.x =  this.interpolate(cWidth/2, 0, altitudePercent) +this.currentRocket.velX/8;
-
-        this.screen.screenOffsetX = -this.currentRocket.x + this.respawnPosition.x;
-
-        this.bases.forEach(base => {
-            base.color = "rgb(50,50,50,0.3)";
-            base.step(dt);
-        });
-
-        this.fires.forEach(fire => fire.step(dt));
-        this.rockets.forEach(rocket => rocket.step(dt));
-        this.smoke.forEach(particle => particle.step(dt));
-        this.pieces.forEach(piece => piece.step(dt));
-
 
         // remove death stuff
         this.smoke = this.smoke.filter(particle => particle.life > 0);
         this.rockets = this.rockets.filter(rocket => rocket.life > 0);
         this.pieces = this.pieces.filter(piece => piece.life > 0);
         this.fires = this.fires.filter(fire => fire.life > 0);
+        
+
+        this.checkMission();
+
+        this.screen.update(dt);
+
 
 
         // Smoke self Interaction
@@ -82,7 +76,35 @@ class Game {
                     this.collideWithForce(dot, otherDot, force);
             });
 
+        });        
+
+        this.fires.forEach(fire => fire.step(dt));
+        this.rockets.forEach(rocket => rocket.step(dt));
+        this.smoke.forEach(particle => particle.step(dt));
+        this.pieces.forEach(piece => piece.step(dt));
+
+
+        if (this.stop) return;
+
+        // Vertical Zoom with logic, no frustrum view
+        let altitudePercent = (1 - this.currentRocket.altitude / this.currentRocket.altitudeMax);
+
+        this.screen.scaleY = this.interpolate(0.45, 1.0, altitudePercent);
+        this.screen.screenOffsetY = this.interpolate(900, -100, altitudePercent);
+
+        this.screen.scaleX = this.screen.scaleY;
+        this.screen.x = this.interpolate(cWidth / 2, 0, altitudePercent) + this.currentRocket.velX / 8;
+
+        this.screen.screenOffsetX = -this.currentRocket.x + this.respawnPosition.x;
+
+        this.bases.forEach(base => {
+            base.color = "rgb(50,50,50,0.3)";
+            base.step(dt);
         });
+
+
+
+
 
         // Rocket can only fuel at base
         if (this.bases.length > 0) {
@@ -114,10 +136,6 @@ class Game {
             this.autorespawn = false;
         }
 
-        this.screen.update(dt);
-
-
-
     }
 
     draw(ctx) {
@@ -133,6 +151,7 @@ class Game {
         this.rockets.forEach(rocket => game.screen.draw(rocket));
         this.smoke.forEach(particle => game.screen.draw(particle));
 
+
     }
 
     event(type, position) {
@@ -141,6 +160,21 @@ class Game {
     }
 
 
+    mouseMoveEvent(position) {
+        var screenPosition = game.screen.translate(position);
+    }
+    mouseClickLeftEvent(position) {
+        var screenPosition = game.screen.translate(position);
+    }
+    mouseClickRightEvent(position) {
+        var screenPosition = game.screen.translate(position);
+    }
+
+    mouseUpEvent(position) {
+
+        var screenPosition = game.screen.translate(position);
+
+    }
 
     thrusRocket() {
         if (this.currentRocket)
@@ -191,7 +225,7 @@ class Game {
 
         for (let i = 0; i < count; i++) {
             pos = { x: pos.x + (Math.random() - 0.5) * 20, y: pos.y };
-            let vel = { x: 0, y: 0};
+            let vel = { x: 0, y: 0 };
             if (emitter.thrust != null) {
                 vel = { x: emitter.thrust.x * 5 + (Math.random() - 0.5) * 5, y: 0 - emitter.thrust.y * 1 + (Math.random() - 0.5) * 5 };
             }
@@ -211,7 +245,7 @@ class Game {
         // A lot of Fire
         let fire = new Fire(rocket.x, rocket.y);
         fire.addListener(this);
-        this.fires.push(fire);        
+        this.fires.push(fire);
 
         // A lot of smoke
         for (let i = 0; i < 100; i++) {
@@ -274,6 +308,28 @@ class Game {
         return false;
     }
 
+
+
+    checkMission() {
+        if (this.currentMission) {
+            this.currentMission.distanceToTarget = -50 + game.bases.filter(base => base.name == game.currentMission.path[1])[0].distance(game.currentRocket);
+            if (this.currentMission.distanceToTarget < 50 && game.currentRocket.grounded && game.currentRocket.life > 0 ) {
+                this.missionCompleted();
+            }
+        }
+    }
+    missionCompleted() {
+        game.stop = true;
+        this.screen.modal.title = "M I S S I O N  C O M P L E T E D !"
+        this.screen.modal.visible = true;
+    }
+
+    nextMission(){
+        this.indexMission++;
+        if (this.indexMission > this.missions.length-1)
+            this.indexMission = 0;
+        this.currentMission = this.missions[this.indexMission];
+    }
 
 
 }
