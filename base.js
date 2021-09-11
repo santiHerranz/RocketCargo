@@ -1,15 +1,13 @@
 
 class Base {
-	constructor(name, x,y, r = 100) {
+	constructor(name, x, y) {
 		this.name = name;
 		this.color = "rgb(200,50,50,0.3)";
 		this.x = x;
 		this.y = y;
 		this.vx = 0;
 		this.vy = 0;
-		this.radius = r;
-		this.life = 100.0;		
-        this.SafeDistance = this.radius*0.5;
+		this.radius = 50;
 	}
 
 	step(dt) {
@@ -18,17 +16,20 @@ class Base {
 
 	draw() {
 
+		ctx.save();
+		ctx.translate(this.x,this.y);
+
 		ctx.strokeStyle = this.color;
 		ctx.fillStyle = this.color;
 		ctx.beginPath();
-		ctx.ellipse(this.x, this.y+30, this.radius, this.radius*0.2, 0, 0, 2 * Math.PI);
+		ctx.ellipse(0, 0+30, this.radius, this.radius*0.2, 0, 0, 2 * Math.PI);
 		ctx.fill();
 		ctx.stroke();
 
 		ctx.strokeStyle = this.color;
 		ctx.fillStyle = this.color;
 		ctx.beginPath();
-		ctx.ellipse(this.x, this.y+26, this.SafeDistance, this.SafeDistance*0.2, 0, 0, 2 * Math.PI);
+		ctx.ellipse(0, 0+26, this.radius/2, this.radius/2*0.2, 0, 0, 2 * Math.PI);
 		ctx.fill();
 		ctx.stroke();
 
@@ -36,8 +37,14 @@ class Base {
         ctx.textAlign = "left";
         ctx.fillStyle = "#000000";
 		let size = ctx.measureText(this.name);
-        ctx.fillText(this.name, this.x - size.width/2, this.y+80);
-        ctx.restore();
+        ctx.fillText(this.name, 0 - size.width/2, 0+80);
+
+        // ctx.beginPath(),
+        // ctx.arc(0,0,this.radius,0,Math.PI*2);
+        // ctx.stroke();
+        // ctx.closePath();
+
+		ctx.restore();
 	}
 
 

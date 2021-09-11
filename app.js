@@ -102,7 +102,8 @@ var update = function (dt) {
 	}
 
   if (input.quit == input.state.ACTIVE) {
-		game.destroyRocket();
+	game.destroyRocket();
+	game.destroyPlanes();
     input.quit = input.state.INACTIVE;
 	}
 

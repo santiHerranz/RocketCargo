@@ -1,36 +1,22 @@
 
-class Rocket {
+class Rocket extends Vehicle {
 
 
-    constructor(x, y, modelIndex = 0) {
+    constructor(x, y) {
+        super(x, y);
 
         this.name = "rocket";
 
-        this.life = 100;
 
-        this.x = x;
-        this.y = y;
-        this.r = 4;
+        this.status = "landed";
 
-
-
-        this.ground = y;
         this.altitude = 0;
         this.altitudeMax = 1500;
 
-        this.velX = 0;
-        this.velY = 0;
-        //this.speed = 0;
 
         this.distanceTavelled = 0;
 
         this.thrustAngle = Math.PI;
-
-        this.lastY = this.y;
-
-
-        this.status = "landed";
-        this.lastStatus = this.status;
 
 
         this.thrust = { x: 0, y: 0 };
@@ -44,37 +30,17 @@ class Rocket {
         this.manualThrust = gravity * 2.0;
         this.landingThrust = gravity * 2.0;
 
-
-        this.dryMass = 200;
-        this.mass = this.dryMass;
-
-        this.explode = false;
-        this.hasExplode = false;
-
-        this.listeners = [];
-
         this.landingConstraints = { dx: 30, dy: 30 };
 
-
-        this.side = 8; //4; //32; //16; //
-
-
-        let model = rocketModels[modelIndex];
-
-        this.name = model.name;
-        this.imageData = model.imageData;
-        this.imageWidth = model.width;
-        this.imageHeight = model.height;
-        this.fuelTank = model.tank;
-        this.smokePosition = model.smoke;
 
         this.Width = 20;
         this.Length = 40;
 
-        this.w = this.imageWidth / this.side; //this.Width / this.side;
-        this.h = this.imageHeight / this.side; //this.Length / this.side;
+        this.dryMass = 200;
+        this.mass = this.dryMass;
 
-        this.pieces = [];
+        this.side = 4; //32; //16; //8; //
+
 
     }
 
@@ -115,14 +81,13 @@ class Rocket {
         this.thrust.y = 0;
 
 
-        // apply forces	
-        this.x += dt * this.velX;
-        this.y += dt * this.velY;
+        super.step(dt);
+
 
         // Max altitude
-        this.altitude = -this.y+this.ground-50;
+        this.altitude = -this.y + this.ground - 50;
         if (this.altitude > this.altitudeMax) {
-            this.y = -this.altitudeMax+this.ground-50;
+            this.y = -this.altitudeMax + this.ground - 50;
             this.velY = 0;
         }
 
@@ -154,8 +119,12 @@ class Rocket {
     }
 
 
+
+
     draw(ctx) {
-       if (this.thrusting)
+        super.draw(ctx);
+
+        if (this.thrusting)
             this.drawExhaustPlume(this);
         this.drawRocket(ctx);
     }
@@ -173,8 +142,7 @@ class Rocket {
 
         let img = new Image();
         img.src = this.imageData;
-
-        ctx.drawImage(img, 0 - this.Width*2, 0, this.Width*4, this.Length*2);
+        ctx.drawImage(img, 0 - this.Width * 2, 0, this.Width * 4, this.Length * 2);
 
         ctx.lineWidth = L / 40;
         ctx.lineJoin = 'round';
@@ -214,7 +182,7 @@ class Rocket {
         var radians = ship.thrustAngle;
 
         var x = ship.x + Math.cos(radians - Math.PI * 2) * ship.r;
-        var y = ship.y + this.Length *1.2 + Math.sin(radians - Math.PI * 2) * ship.r;
+        var y = ship.y + this.Length * 1.2 + Math.sin(radians - Math.PI * 2) * ship.r;
 
         flamex[1] = x + Math.cos(radians - Math.PI * 2) * SIZE * 4;
         flamey[1] = y + Math.sin(radians - Math.PI * 2) * SIZE * 4;
@@ -244,6 +212,7 @@ class Rocket {
 
 
 
+
     moveRocket(value) {
         if (!this.grounded && this.fuel > 0) {
             this.thrust.x += value;
@@ -257,42 +226,14 @@ class Rocket {
             this.thrust.y += this.manualThrust;
     }
     refuelRocket() {
-        if (this.grounded && this.fuel < this.fuel_MAX && this.canFuel) {
-            this.fuel += this.fuel_MAX/100;
+        if (this.fuel < this.fuel_MAX && this.canFuel) {
+            this.fuel += this.fuel_MAX / 100;
         }
     }
 
-    destroyRocket() {
-        if (!this.hasExplode) {
-            this.exploding();
-            this.life = 0;
-            this.hasExplode = true;
-        }
-
-    }
-
-
-
-    addListener(listener) {
-        this.listeners.push(listener);
-    }
-    smoking() {
-        this.listeners.forEach(listener => {
-            listener.smoking(this);
-        });
-    }
-    exploding() {
-        this.listeners.forEach(listener => {
-            listener.exploding(this);
-        });
-    }
 
     smokingPosition() {
         return { x: this.x + this.smokePosition.x + 20 * Math.cos(this.thrustAngle), y: this.y + this.smokePosition.y + 40 + 20 * Math.sin(this.thrustAngle) };
-    }
-
-    explodePosition() {
-        return { x: this.x, y: this.y };
     }
 
 }

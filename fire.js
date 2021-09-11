@@ -33,7 +33,7 @@ Fire.prototype.addListener = function (listener) {
 }
 
 Fire.prototype.smokingPosition = function () {
-  return { x: this.x  , y: this.y };
+  return { x: this.x, y: this.y };
 }
 
 Fire.prototype.step = function (dt) {
@@ -48,7 +48,7 @@ Fire.prototype.step = function (dt) {
   this.y += dt * this.vy;
 
   if (this.y > groundPoint)
-  this.y = groundPoint + 20;
+    this.y = groundPoint + 20;
 
   for (var i = 0; i < 1; i++) {
     //Adds a particle at the position, with random horizontal and vertical speeds
@@ -64,7 +64,7 @@ Fire.prototype.step = function (dt) {
 Fire.prototype.draw = function (ctx) {
 
   ctx.save();
-  
+
 
   //Makes the colors add onto each other, producing
   //that nice white in the middle of the fire

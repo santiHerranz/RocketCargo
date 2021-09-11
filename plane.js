@@ -1,92 +1,42 @@
 
-class Plane {
+class Plane extends Vehicle {
+
     constructor(pos, vel) {
+        
+        super(pos.x,pos.y);
 
-        this.x = pos.x;
-        this.y = pos.y;
-        this.w = 20;
-        this.h = 40;
-        this.radius = 30;
-
+        this.name = "plane";
         this.velX = vel.x;
         this.velY = vel.y;
 
-        this.life = 500;
+        let model = rocketModels[1];
 
-        let model = rocketModels[0];
-
-        this.name = model.name;
         this.imageData = model.imageData;
         this.imageWidth = model.width;
         this.imageHeight = model.height;
-        this.fuelTank = model.tank;
-        this.smokePosition = model.smoke;
 
-        
-        this.listeners = [];
+        this.Width = 108;
+        this.Length = 32;
 
-    }
+        this.side = 4; //32; //16; //8; //
 
-    step(dt) {
-
-        //this.velY += gravity;
-
-        // apply forces	
-        this.x += dt * this.velX;
-        this.y += dt * this.velY;
-
-        this.smoking(1);
-
-        if (this.status == "crashed") {
-            this.grounded = true;
-            this.y = groundPoint - 50;
-            this.velX = 0;
-            this.velY = 0;
-        }
     }
 
     draw(ctx) {
+        
+        super.draw(ctx);
 
         ctx.save();
         ctx.translate(this.x, this.y);
 
+        if (this.velX > 0)
+            ctx.scale(-1, 1)
+
         let img = new Image();
         img.src = this.imageData;
-
-        ctx.drawImage(img, 0 - this.w * 2, 0, this.w * 4, this.h * 2);
+        ctx.drawImage(img, 0 - this.Width/2, 0-this.Length/2, this.Width, this.Length);
 
         ctx.restore();
     }
 
-    destroyPlane() {
-        if (!this.hasExplode) {
-            this.exploding();
-            this.life = 0;
-            this.hasExplode = true;
-        }
-
-    }
-
-
-    addListener(listener) {
-        this.listeners.push(listener);
-    }
-    smoking(count) {
-        this.listeners.forEach(listener => {
-            listener.smoking(this, count);
-        });
-    }
-    exploding() {
-        this.listeners.forEach(listener => {
-            listener.exploding(this);
-        });
-    }
-
-    smokingPosition() {
-        return { x: this.x, y: this.y };
-    }
-
-    explodePosition() {
-        return { x: this.x, y: this.y };
-    }
 }
