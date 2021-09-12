@@ -5,7 +5,7 @@ class Rocket extends Vehicle {
     constructor(x, y) {
         super(x, y);
 
-        this.name = "rocket";
+
 
         this.loaded = false;
         this.load = "";
@@ -24,7 +24,7 @@ class Rocket extends Vehicle {
         this.thrust = { x: 0, y: 0 };
         this.thrusting = false;
 
-        this.fuel_MAX = 1200;
+        this.fuel_MAX = 5000;
         this.fuel = this.fuel_MAX * 2 / 3;
         this.grounded = true;
         this.canFuel = false;
@@ -164,14 +164,6 @@ class Rocket extends Vehicle {
         ctx.fillRect(this.fuelTank.x - tankWidth * 2, this.fuelTank.y - L / 2 + tankHeigth * (1 - (this.fuel / this.fuel_MAX)), tankWidth, tankHeigth * (this.fuel / this.fuel_MAX));
         ctx.strokeStyle = "rgba(0,0,0,0.2)";
         ctx.strokeRect(this.fuelTank.x - tankWidth * 2, this.fuelTank.y - L / 2, tankWidth, tankHeigth);
-        ctx.restore();
-
-        ctx.save();
-        ctx.font = "10px Verdana";
-        ctx.textAlign = "left";
-        ctx.fillStyle = "#000000";
-        ctx.beginPath();
-        ctx.fillText("" + this.name, this.x + 30, this.y);
         ctx.restore();
 
         if (this.loaded) {
