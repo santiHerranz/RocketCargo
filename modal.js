@@ -7,9 +7,9 @@ class Modal {
         this.title = "";
 
 
-        this.color = "#2869AD";
-        this.width = 400;
-        this.height = 200;
+        this.color = "#282828";
+        this.width = 600;
+        this.height = 300;
 
         this.x = screen.width / 2 - this.width / 2;
         this.y = screen.height / 2 - this.height / 2;
@@ -34,9 +34,6 @@ class Modal {
         var a = new Button(this.x + this.width / 2 - 50 / 2, this.y + this.height * 0.8, 50, 20, 'OK', bStyle
             , function () {
                 if (!game.screen.modal.visible) return;
-
-                console.log('OK');
-                game.nextMission();
                 game.screen.modal.visible = false;
                 game.stop = false;
             });
@@ -69,8 +66,28 @@ class Modal {
         ctx.fillStyle = '#FFF';
         var size = ctx.measureText(this.title);
         var x = this.x + this.width / 2 - size.width / 2;
-        var y = this.y + halfH;
+        var y = this.y + 50;
         ctx.fillText(this.title, x, y);
+
+
+        let spacer = 0, textSpacer = 25;
+
+        ctx.font = "16px Helvetica";
+
+        ctx.translate(this.x+20, this.y+100);
+
+        ctx.beginPath();
+        ctx.fillText("Press F to refuel the Rocket at base", 0, 0 + spacer++ * textSpacer);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.fillText("Press W or UP to thrust the rocket", 0, 0 + spacer++ * textSpacer);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.fillText("Press A/D or LEFT/RIGHT to move the rocket when flying", 0, 0 + spacer++ * textSpacer);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.fillText("Press Q to activate FTS (Flight Termination System)", 0, 0 + spacer++ * textSpacer);
+        ctx.stroke();        
 
         ctx.restore();
 

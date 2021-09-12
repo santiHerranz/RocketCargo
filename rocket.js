@@ -7,6 +7,8 @@ class Rocket extends Vehicle {
 
         this.name = "rocket";
 
+        this.loaded = false;
+        this.load = "";
 
         this.status = "landed";
 
@@ -30,7 +32,7 @@ class Rocket extends Vehicle {
         this.manualThrust = gravity * 2.0;
         this.landingThrust = gravity * 2.0;
 
-        this.landingConstraints = { dx: 30, dy: 30 };
+        this.landingConstraints = { dx: 50, dy: 50 };
 
 
         this.Width = 20;
@@ -72,7 +74,7 @@ class Rocket extends Vehicle {
         if (Math.abs(this.thrust.x) > 0 || Math.abs(this.thrust.y) > 0) {
             this.status = "flying";
             this.grounded = false;
-            this.hasExplode = false;
+            this.hasExploded = false;
             this.thrusting = true;
             this.smoking();
         }
@@ -126,6 +128,7 @@ class Rocket extends Vehicle {
 
         if (this.thrusting)
             this.drawExhaustPlume(this);
+
         this.drawRocket(ctx);
     }
 
@@ -140,9 +143,8 @@ class Rocket extends Vehicle {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        let img = new Image();
-        img.src = this.imageData;
-        ctx.drawImage(img, 0 - this.Width * 2, 0, this.Width * 4, this.Length * 2);
+        ctx.beginPath();
+        ctx.drawImage(this.img, 0 - this.Width * 2, 0, this.Width * 4, this.Length * 2);
 
         ctx.lineWidth = L / 40;
         ctx.lineJoin = 'round';
@@ -152,6 +154,7 @@ class Rocket extends Vehicle {
         let tankWidth = this.fuelTank.w; //W / 4;
         let tankHeigth = this.fuelTank.h; //L * 2 / 4;
         ctx.fillStyle = this.fuelTank.color;  //"rgba(206,135,235,0.6)";
+        ctx.beginPath();
         ctx.fillRect(this.fuelTank.x - tankWidth * 2, this.fuelTank.y - L / 2 + tankHeigth * (1 - (this.fuel / this.fuel_MAX)), tankWidth, tankHeigth * (this.fuel / this.fuel_MAX));
         ctx.strokeStyle = "rgba(0,0,0,0.2)";
         ctx.strokeRect(this.fuelTank.x - tankWidth * 2, this.fuelTank.y - L / 2, tankWidth, tankHeigth);
@@ -161,8 +164,19 @@ class Rocket extends Vehicle {
         ctx.font = "10px Verdana";
         ctx.textAlign = "left";
         ctx.fillStyle = "#000000";
+        ctx.beginPath();
         ctx.fillText("" + this.name, this.x + 30, this.y);
         ctx.restore();
+
+        if (this.loaded) {
+            ctx.save();
+            ctx.font = "50px Verdana";
+            ctx.textAlign = "center";
+            ctx.fillStyle = "#000000";
+            ctx.beginPath();
+            ctx.fillText(this.load, this.x , this.y-10);
+            ctx.restore();
+        }
 
     }
 

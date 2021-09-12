@@ -2,15 +2,20 @@
 class Base {
 	constructor(name, x, y) {
 		this.name = name;
-		this.color = "rgb(200,50,50,0.3)";
+		this.colorNormal = "rgb(100,50,50,0.3)";
+		this.colorActive = "rgb(100,50,50,0.6)";
+		this.color = this.colorNormal
 		this.x = x;
 		this.y = y;
 		this.vx = 0;
 		this.vy = 0;
 		this.radius = 50;
+		this.type = (y == groundPoint? Base.TYPE.GROUND:Base.TYPE.SPACE) ; 
 	}
 
 	step(dt) {
+
+
 
 	}
 
@@ -21,23 +26,28 @@ class Base {
 
 		ctx.strokeStyle = this.color;
 		ctx.fillStyle = this.color;
-		ctx.beginPath();
-		ctx.ellipse(0, 0+30, this.radius, this.radius*0.2, 0, 0, 2 * Math.PI);
-		ctx.fill();
-		ctx.stroke();
 
-		ctx.strokeStyle = this.color;
-		ctx.fillStyle = this.color;
-		ctx.beginPath();
-		ctx.ellipse(0, 0+26, this.radius/2, this.radius/2*0.2, 0, 0, 2 * Math.PI);
-		ctx.fill();
-		ctx.stroke();
+		if (this.type == Base.TYPE.GROUND) {
+			ctx.beginPath();
+			ctx.ellipse(0, 0+30, this.radius, this.radius*0.2, 0, 0, 2 * Math.PI);
+			ctx.fill();
+			ctx.stroke();
+	
+			ctx.beginPath();
+			ctx.ellipse(0, 0+26, this.radius/2, this.radius/2*0.2, 0, 0, 2 * Math.PI);
+			ctx.fill();
+			ctx.stroke();
+		} else if (this.type == Base.TYPE.SPACE){
+			ctx.beginPath();
+			ctx.fillRect(0, 0+26, this.radius*2, this.radius/2);
+			ctx.stroke();
+		}
 
-        ctx.font = "bold 34px Verdana";
+        ctx.font = "bold 60px Verdana";
         ctx.textAlign = "left";
         ctx.fillStyle = "#000000";
 		let size = ctx.measureText(this.name);
-        ctx.fillText(this.name, 0 - size.width/2, 0+80);
+        ctx.fillText(this.name, 0 - size.width/2, 0+100);
 
         // ctx.beginPath(),
         // ctx.arc(0,0,this.radius,0,Math.PI*2);
@@ -69,3 +79,5 @@ class Base {
 		return dist;
 	}	
 }
+
+Base.TYPE = {GROUND:"GROUND",SPACE:"SPACE"};

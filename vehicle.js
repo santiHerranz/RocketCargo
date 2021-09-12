@@ -2,7 +2,7 @@
 class Vehicle {
 
 
-    constructor(x, y) {
+    constructor(x, y, modelIndex = 0) {
 
         this.name = "vehicle";
 
@@ -17,22 +17,18 @@ class Vehicle {
 
         this.velX = 0;
         this.velY = 0;
-        //this.speed = 0;
 
         this.lastY = this.y;
 
 
-
-
-        this.explode = false;
-        this.hasExplode = false;
+        this.hasExploded = false;
 
         this.listeners = [];
 
 
 
 
-        let model = rocketModels[0];
+        let model = vehicleModels[modelIndex];
 
         this.name = model.name;
         this.imageData = model.imageData;
@@ -40,6 +36,10 @@ class Vehicle {
         this.imageHeight = model.height;
         this.fuelTank = model.tank;
         this.smokePosition = model.smoke;
+
+        this.img = new Image();
+        this.img.src = this.imageData;
+
 
         this.Width = 20;
         this.Length = 40;
@@ -55,15 +55,9 @@ class Vehicle {
 
     step(dt) {
 
-
-
-
         // apply forces	
         this.x += dt * this.velX;
         this.y += dt * this.velY;
-
-
-
     }
 
 
@@ -84,10 +78,10 @@ class Vehicle {
 
 
     destroyVehicle() {
-        if (!this.hasExplode) {
+        if (!this.hasExploded) {
             this.exploding();
             this.life = 0;
-            this.hasExplode = true;
+            this.hasExploded = true;
         }
 
     }

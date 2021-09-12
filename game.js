@@ -6,7 +6,7 @@ class Game {
 
         this.screen = new Screen(window.innerWidth * 1, window.innerHeight * 1, ctx);
 
-        this.dificulty = 20;
+        this.dificulty = 2;
 
         this.stop = false;
         this.dt = 10 / 100;
@@ -19,7 +19,7 @@ class Game {
         this.fires = [];
         this.pieces = [];
         this.bases = [];
-
+        
         this.rocket = null;
         this.lastRocketY = 0;
 
@@ -28,23 +28,37 @@ class Game {
 
         this.planeRespawn = true;
 
+        this.bases.push(new Resource("📦", this.respawnPos.x+400, groundPoint));
+        this.bases.push(new Resource("🍔", this.respawnPos.x+3500, groundPoint));
+        this.bases.push(new Resource("🧊", this.respawnPos.x+2200, groundPoint));
 
-        this.bases.push(new Base("A", this.respawnPos.x, groundPoint));
-        this.bases.push(new Base("B", this.respawnPos.x+1000, groundPoint-1000));
-        this.bases.push(new Base("C", this.respawnPos.x+2000, groundPoint));
-        this.bases.push(new Base("D", this.respawnPos.x+3000, groundPoint-800));
-        this.bases.push(new Base("E", this.respawnPos.x+4000, groundPoint));
 
+        this.bases.push(new Base("👽", this.respawnPos.x-1000, groundPoint-1400));
+        // this.bases.push(new Base("🏦", this.respawnPos.x-1500, groundPoint));
+        this.bases.push(new Base("🛸", this.respawnPos.x+1500, groundPoint-1300));
+        // this.bases.push(new Base("🏰", this.respawnPos.x+1350, groundPoint));
+        this.bases.push(new Base("👾", this.respawnPos.x+3500, groundPoint-1250));
+
+
+        let resourceList = ["📦","🍔"];
+        let customerList = ["👽","🛸","👾"]; //,"🏦","🏰"
 
         this.missionIndex = 0;
         this.missions = [];
-        this.missions.push({ path: ["A", "C"], description: " to carry customer payloads" });
-        this.missions.push({ path: ["C", "B"], description: " to carry customer payloads" });
-        this.missions.push({ path: ["B", "D"], description: " to carry customer payloads" });
-        this.missions.push({ path: ["D", "A"], description: " to carry customer payloads" });
+
+        for (let index = 0; index < 50; index++) {
+            let r = resourceList[Math.floor(Math.random()*resourceList.length)];
+            let c = customerList[Math.floor(Math.random()*customerList.length)];
+            this.missions.push({ path: [r,c]});
+        }
         this.mission = this.missions[this.missionIndex];
+        this.missionCompleted = false;
 
         this.newRocket(this.respawnPos);
+
+        // setTimeout(() => {
+        //     this.showHelp();
+        // },100);
 
     }
 
@@ -53,6 +67,11 @@ class Game {
     }
 
     step(dt) {
+
+        this.screen.update(dt);
+
+        if (this.stop) return;
+
 
         // remove death stuff
         this.smoke = this.smoke.filter(o => o.life > 0);
@@ -64,19 +83,18 @@ class Game {
 
         this.checkMission();
 
-        this.screen.update(dt);
 
 
 
         // Smoke self Interaction
-        let force = { x: 0.001, y: 0.0005 };
-        this.smoke.forEach(dot => {
-            this.smoke.forEach(other => {
-                if (dot.name != other.name)
-                    this.collideWithForce(dot, other, force);
-            });
+        // let force = { x: 0.001, y: 0.0005 };
+        // this.smoke.forEach(dot => {
+        //     this.smoke.forEach(other => {
+        //         if (dot.name != other.name)
+        //             this.collideWithForce(dot, other, force);
+        //     });
 
-        });        
+        // });        
 
         this.fires.forEach(o => o.step(dt));
         this.rockets.forEach(o => o.step(dt));
@@ -85,7 +103,6 @@ class Game {
         this.pieces.forEach(o => o.step(dt));
 
 
-        if (this.stop) return;
 
 
 
@@ -102,7 +119,7 @@ class Game {
         this.screen.offsetX = -this.rocket.x + this.respawnPos.x;
 
         this.bases.forEach(base => {
-            base.color = "rgb(50,50,50,0.3)";
+            base.color = base.colorNormal;
             base.step(dt);
         });
 
@@ -119,8 +136,15 @@ class Game {
 
                 if (nearest != null) {
                     rocket.canFuel = (nearest.distance(rocket) < nearest.radius* 2);
-                    nearest.color = (rocket.canFuel ? "rgb(200,50,50,0.6)" : "rgb(50,50,50,0.3)");
+                    nearest.color = (rocket.canFuel ? nearest.colorActive : nearest.colorNormal);
+
+                    // Also can take away resouces
+                    if (rocket.canFuel && nearest.resource != null && (!rocket.loaded || rocket.load != nearest.resource )) {
+                        rocket.loaded = true;
+                        rocket.load = nearest.resource;
+                    }
                 }
+
             });
         }
 
@@ -169,34 +193,13 @@ class Game {
     draw(ctx) {
         ctx.clearRect(0, 0, cWidth, cHeight);
         this.screen.drawScene();
-        this.bases.forEach(o => game.screen.draw(o));
-        this.fires.forEach(o => game.screen.draw(o));
-        this.pieces.forEach(o => game.screen.draw(o));
-        this.rockets.forEach(o => game.screen.draw(o));
-        this.planes.forEach(o => game.screen.draw(o));
-        this.smoke.forEach(o => game.screen.draw(o));
-    }
-
-    event(type, position) {
-        if (type == "mousedown") {
-        }
-    }
-
-
-    mouseMoveEvent(position) {
-        var screenPosition = game.screen.translate(position);
-    }
-    mouseClickLeftEvent(position) {
-        var screenPosition = game.screen.translate(position);
-    }
-    mouseClickRightEvent(position) {
-        var screenPosition = game.screen.translate(position);
-    }
-
-    mouseUpEvent(position) {
-
-        var screenPosition = game.screen.translate(position);
-
+        this.bases.forEach(o => game.screen.drawItem(o));
+        this.fires.forEach(o => game.screen.drawItem(o));
+        this.pieces.forEach(o => game.screen.drawItem(o));
+        this.rockets.forEach(o => game.screen.drawItem(o));
+        this.planes.forEach(o => game.screen.drawItem(o));
+        this.smoke.forEach(o => game.screen.drawItem(o));
+        this.screen.draw(ctx);
     }
 
     thrusRocket() {
@@ -212,13 +215,6 @@ class Game {
     destroyRocket() {
         if (this.rocket)
             this.rocket.destroyVehicle();
-    }
-    destroyPlanes() {
-        this.planes[0].destroyVehicle();
-        this.planes[1].destroyVehicle();
-        this.planes[2].destroyVehicle();
-        this.planes[3].destroyVehicle();
-        this.planes[4].destroyVehicle();
     }
 
     moveRocket(value) {
@@ -361,18 +357,31 @@ class Game {
 
 
 
+    showHelp() {
+        this.screen.modal.title = "H E L P"
+        this.screen.modal.visible = true;
+        this.stop = true;
+    }
+
+
     checkMission() {
         if (this.mission) {
-            this.mission.distanceToTarget = -50 + game.bases.filter(base => base.name == game.mission.path[1])[0].distance(game.rocket);
-            if (this.mission.distanceToTarget < 50 && game.rocket.life > 0 ) {
-                this.missionCompleted();
+            let base = this.bases.filter(base => base.name == this.mission.path[1])[0];
+            if (base != null) {
+                this.mission.distanceToTarget = -50 + base.distance(this.rocket);
+                if (this.mission.distanceToTarget < 50 && this.rocket.loaded && this.rocket.life > 0 ) {
+                    this.missionHasCompleted();
+                }
             }
         }
     }
-    missionCompleted() {
-        game.stop = true;
-        this.screen.modal.title = "M I S S I O N  C O M P L E T E D !"
-        this.screen.modal.visible = true;
+    missionHasCompleted() {
+        if (!this.missionCompleted) {
+            setTimeout(() => {
+                game.nextMission();
+            }, 800);
+            this.missionCompleted = true;
+        }
     }
 
     nextMission(){
@@ -380,6 +389,8 @@ class Game {
         if (this.missionIndex > this.missions.length-1)
             this.missionIndex = 0;
         this.mission = this.missions[this.missionIndex];
+        this.missionCompleted = false;
+        this.rocket.loaded = false;
     }
 
 

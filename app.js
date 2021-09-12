@@ -15,13 +15,13 @@ var dt = 10 / 100;
 
 var groundPoint = cHeight - (cHeight / 10);
 
-var parallaxSpeed = {x:0};
+var parallaxSpeed = { x: 0 };
 
-var game = new Game(cWidth/2, groundPoint-600);
+var game = new Game(cWidth / 2, groundPoint - 600);
 
 
-function randNum (min, max) {                           
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+function randNum(min, max) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 
@@ -32,53 +32,21 @@ var mousePosition = {
 };
 var mouseLeftPressed = false;
 var mouseRightPressed = false;
-var mouseLeftClickCount = false;
-var mouseRightClickCount = false;
-
-
 
 canvas.addEventListener('mousemove', function (event) {
 
-	var rect = canvas.getBoundingClientRect();
-
 	mousePosition.x = (event.offsetX || event.layerX);
 	mousePosition.y = (event.offsetY || event.layerY);
-
-  
-
-	game.mouseMoveEvent({ x: event.clientX, y: event.clientY });
-
 });
 
 canvas.addEventListener('mousedown', function (event) {
-
-	var e = e || window.event;
-	var btnCode;
-
-	if ('object' === typeof e) {
-		btnCode = e.button;
-		switch (btnCode) {
-			case 0:
-				mouseLeftPressed = true;
-        game.mouseClickLeftEvent({ x: event.clientX, y: event.clientY });
-				break;
-			case 1: console.log('Middle'); 	break;
-			case 2:
-				mouseRightPressed = true;
-        game.mouseClickRightEvent({ x: event.clientX, y: event.clientY });
-				break;
-		}
-	}
+	mouseLeftPressed = true;
 });
 
 canvas.addEventListener('mouseup', function (event) {
 	mouseLeftPressed = false;
 	mouseRightPressed = false;
-	game.mouseUpEvent({ x: event.clientX, y: event.clientY });
 });
-
-
-
 
 
 canvas.addEventListener('contextmenu', function (event) {
@@ -88,55 +56,50 @@ canvas.addEventListener('contextmenu', function (event) {
 });
 
 function getMousePos(canvas, evt) {
-  var rect = canvas.getBoundingClientRect();
-  return {
-    x: evt.clientX - rect.left,
-    y: evt.clientY - rect.top
-  };
+	var rect = canvas.getBoundingClientRect();
+	return {
+		x: evt.clientX - rect.left,
+		y: evt.clientY - rect.top
+	};
 }
 
 var update = function (dt) {
 
-  if (input.up) {
+	if (input.up) {
 		game.thrusRocket();
 	}
 
-  if (input.quit == input.state.ACTIVE) {
-	game.destroyRocket();
-	game.destroyPlanes();
-    input.quit = input.state.INACTIVE;
+	if (input.quit == input.state.ACTIVE) {
+		game.destroyRocket();
+		input.quit = input.state.INACTIVE;
 	}
 
-  if (input.new == input.state.ACTIVE) {
+	if (input.new == input.state.ACTIVE) {
 		game.newRocket();
-    input.new = input.state.INACTIVE;
+		input.new = input.state.INACTIVE;
 	}
-
-  if (input.left) {
+	if (input.help) {
+		game.showHelp();
+	}
+	if (input.left) {
 		game.moveRocket(-1);
 	}
-  if (input.right) {
+	if (input.right) {
 		game.moveRocket(+1);
 	}
 
-  if (input.refuel) {
+	if (input.refuel) {
 		game.refuelRocket();
 	}
 
-  game.step(dt);
+	game.step(dt);
 
 }
-
-var render = function () {
-  game.draw(ctx);
-}
-
-
 
 var main = function () {
-  update(dt);
-  render();
-  requestAnimationFrame(main);
+	update(dt);
+	game.draw(ctx);
+	requestAnimationFrame(main);
 }
 
 
@@ -148,7 +111,7 @@ requestAnimationFrame = w.requestAnimationFrame || w.webkitRequestAnimationFrame
 
 function onkeydown(evt) {
 	var code = evt.keyCode;
-	
+
 	//console.log(code);
 
 	if (code == KEY.D || code == KEY.RIGHT) input.right = true;
@@ -158,18 +121,20 @@ function onkeydown(evt) {
 
 	if (code == KEY.ESPACE) input.espace = true;
 	if (code == KEY.ENTER) input.enter = true;
-  if (code == KEY.F ) input.refuel = true;
+	if (code == KEY.H) input.help = true;
+	if (code == KEY.F1) input.help = true;
+	if (code == KEY.F) input.refuel = true;
 
-  // Once
-  if (code == KEY.N && input.new == input.state.RELEASED ) input.new = input.state.ACTIVE;
-  if (code == KEY.M && input.model == input.state.RELEASED) input.model = input.state.ACTIVE;
-  if (code == KEY.Q && input.quit == input.state.RELEASED ) input.quit = input.state.ACTIVE;
+	// Once
+	if (code == KEY.N && input.new == input.state.RELEASED) input.new = input.state.ACTIVE;
+	if (code == KEY.M && input.model == input.state.RELEASED) input.model = input.state.ACTIVE;
+	if (code == KEY.Q && input.quit == input.state.RELEASED) input.quit = input.state.ACTIVE;
 
 }
 
 
 function onkeyup(evt) {
-    var code = evt.keyCode;
+	var code = evt.keyCode;
 
 	//console.log(code);
 
@@ -179,20 +144,22 @@ function onkeyup(evt) {
 	if (code == KEY.S || code == KEY.DOWN) input.down = false;
 
 
-	if (code == KEY.ESPACE ) { input.espace = false; }
+	if (code == KEY.ESPACE) { input.espace = false; }
 	if (code == KEY.ENTER) input.enter = false;
-  if (code == KEY.F ) input.refuel = false;
+	if (code == KEY.H) input.help = false;
+	if (code == KEY.F1) input.help = false;
+		if (code == KEY.F) input.refuel = false;
 
-  if (code == KEY.N ) input.new = input.state.RELEASED;
-  if (code == KEY.M ) input.model = input.state.RELEASED;
-  if (code == KEY.Q ) input.quit = input.state.RELEASED;
+	if (code == KEY.N) input.new = input.state.RELEASED;
+	if (code == KEY.M) input.model = input.state.RELEASED;
+	if (code == KEY.Q) input.quit = input.state.RELEASED;
 
 }
 
 
 
-addEventListener( 'keydown', onkeydown );
-addEventListener( 'keyup', onkeyup );
+addEventListener('keydown', onkeydown);
+addEventListener('keyup', onkeyup);
 
 
 main();

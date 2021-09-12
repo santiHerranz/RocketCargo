@@ -3,13 +3,13 @@ class Plane extends Vehicle {
 
     constructor(pos, vel) {
         
-        super(pos.x,pos.y);
+        super(pos.x,pos.y, 1);
 
         this.name = "plane";
         this.velX = vel.x;
         this.velY = vel.y;
 
-        let model = rocketModels[1];
+        let model = vehicleModels[1];
 
         this.imageData = model.imageData;
         this.imageWidth = model.width;
@@ -23,7 +23,7 @@ class Plane extends Vehicle {
     }
 
     draw(ctx) {
-        
+
         super.draw(ctx);
 
         ctx.save();
@@ -32,9 +32,8 @@ class Plane extends Vehicle {
         if (this.velX > 0)
             ctx.scale(-1, 1)
 
-        let img = new Image();
-        img.src = this.imageData;
-        ctx.drawImage(img, 0 - this.Width/2, 0-this.Length/2, this.Width, this.Length);
+        ctx.beginPath();
+        ctx.drawImage(this.img, 0 - this.Width/2, 0-this.Length/2, this.Width, this.Length);
 
         ctx.restore();
     }
