@@ -468,7 +468,9 @@ class Game {
     }
     missionHasCompleted() {
         if (!this.missionCompleted) {
-            this.soundMissionCompleted.play(); 
+
+            // Here it goes mission complete sound
+
             setTimeout(() => {
                 game.nextMission();
             }, 200);
