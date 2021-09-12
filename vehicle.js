@@ -10,6 +10,9 @@ class Vehicle {
         this.x = x;
         this.y = y;
         this.radius = 30;
+        this.width = 2*this.radius;
+        this.height = 2*this.radius;
+
 
         this.life = 100;
 
@@ -63,15 +66,19 @@ class Vehicle {
 
     draw(ctx) {
 
-        // ctx.save();
-        // ctx.translate(this.x, this.y);
+        ctx.save();
+        ctx.translate(this.x, this.y);
 
         // ctx.beginPath(),
         // ctx.arc(0,0,this.radius,0,Math.PI*2);
         // ctx.stroke();
         // ctx.closePath();
 
-        // ctx.restore();
+        // ctx.rect(-this.width/2, -this.height/2, this.width, this.height);
+        // ctx.stroke();
+
+
+        ctx.restore();
     }
 
 

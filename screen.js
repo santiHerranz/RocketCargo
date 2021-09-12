@@ -58,19 +58,10 @@ class Screen {
                 this.trees.push(tree);
             }
         }
+        // No trees arround respawn point
+        this.trees = this.trees.filter(tree => {return tree.x < cWidth/2 -400 || tree.x > cWidth/2 +400 });
     }
 
-
-
-    translate(position) {
-
-        var rect = canvas.getBoundingClientRect();
-
-        position.x = position.x - this.x - this.offsetX - rect.left;
-        position.y = position.y - this.y - this.offsetY - rect.top;
-
-        return { x: position.x, y: position.y };
-    }
 
     update(dt) {
         this.parallax.update(dt);
@@ -179,10 +170,13 @@ class Screen {
         ctx.fillRect(-100 * cWidth, ground, 200 * cWidth, this.height);
         ctx.restore();
 
+        ctx.restore();
+
+    }
 
 
-
-
+    drawMission() {
+        
 
         let spacer = 0, textSpacer = 30;
 
@@ -194,7 +188,7 @@ class Screen {
             let ry = cHeight - 150;
 
             ctx.beginPath();
-            ctx.fillStyle = "rgb(255,255,255,0.3)";
+            ctx.fillStyle = "rgb(255,255,255,0.6)";
 //            ctx.fillRect(rx - 30, ry - 50, 450, 180, 20);
             ctx.roundRect(rx - 30, ry - 50, 450, 180, 20);
             ctx.fill();
@@ -205,7 +199,7 @@ class Screen {
             ctx.font = "28px Helvetica";
 
             ctx.beginPath();
-            ctx.fillText("Mission " + (game.missionIndex + 1) + ":", rx, ry + spacer++ * textSpacer);
+            ctx.fillText( game.rocket.name + " Mission " + (game.missionIndex + 1) + ":", rx, ry + spacer++ * textSpacer);
             ctx.stroke();
 
             spacer++
@@ -225,10 +219,7 @@ class Screen {
 
 
         ctx.restore();
-
     }
-
-
 
 
 }

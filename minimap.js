@@ -57,12 +57,7 @@ class MiniMap {
 
 
 
-        game.rockets.forEach(rocket => {
-            ctx.beginPath();
-            ctx.fillStyle = "rgb(255, 255, 50)";
-            ctx.arc(50 + rocket.x * ratioX, 0 + rocket.y * ratioY, 5, 0, Math.PI * 2);
-            ctx.fill();
-        });
+
 
         ctx.strokeStyle = "rgb(255,255,255,0.5)";
         ctx.setLineDash([2, 2]);
@@ -105,7 +100,12 @@ class MiniMap {
 
             });
 
-
+            game.rockets.forEach(rocket => {
+                ctx.beginPath();
+                ctx.fillStyle = "rgb(255, 255, 50)";
+                ctx.arc(50 + rocket.x * ratioX, 0 + rocket.y * ratioY, 5, 0, Math.PI * 2);
+                ctx.fill();
+            });
         ctx.restore();
 
     }
