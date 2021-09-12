@@ -80,11 +80,8 @@ class Game {
         // },100);
 
 
-        // A nice Fire
-        let fire = new Fire(cWidth/2-200, groundPoint);
-        fire.addListener(this);
-        this.fires.push(fire);
-        
+        // LOAD SOUNDS
+        this.soundExplosion = document.getElementById("audio_explosion"); 
 
     }
 
@@ -309,6 +306,7 @@ class Game {
         this.fires = [];
         this.smoke = [];
 
+
         return this.rocket;
     }
 
@@ -323,6 +321,8 @@ class Game {
         let plane = new Plane({ x: x, y: y }, v);
         plane.addListener(this);
         this.planes.push(plane);
+
+
     }
 
     smoking(emitter, count = 4) {
@@ -344,6 +344,9 @@ class Game {
 
     exploding(vehicle) {
 
+        if (game.soundExplosion.paused)
+            wgame.soundExplosion.play(); 
+
         let explodePos = vehicle.explodePosition();
         let smokeSize = 3;
         let smokeMass = 0.1;
@@ -354,11 +357,11 @@ class Game {
         this.fires.push(fire);
 
         // A lot of dense smoke falling down
-        // for (let i = 0; i < 100; i++) {
-        //     explodePos = { x: explodePos.x, y: explodePos.y };
-        //     let vel = { x: (Math.random() - 0.5) * 15, y: (Math.random() - 0.5) * 15 };
-        //     this.smoke.push(new SmokeParticle(explodePos.x, explodePos.y, vel, smokeSize, smokeMass));
-        // }
+        for (let i = 0; i < 100; i++) {
+            explodePos = { x: explodePos.x, y: explodePos.y };
+            let vel = { x: (Math.random() - 0.5) * 15, y: (Math.random() - 0.5) * 15 };
+            this.smoke.push(new SmokeParticle(explodePos.x, explodePos.y, vel, smokeSize, smokeMass));
+        }
 
         // Break in a thousand pieces
         for (let y = 0; y < vehicle.side; y++) {
@@ -470,6 +473,7 @@ class Game {
     }
     missionHasCompleted() {
         if (!this.missionCompleted) {
+            this.soundMissionCompleted.play(); 
             setTimeout(() => {
                 game.nextMission();
             }, 200);
