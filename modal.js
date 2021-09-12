@@ -48,6 +48,8 @@ class Modal {
 
         if (!this.visible) return;
 
+        let spacer = 0, textSpacer = 25;
+
         ctx.save();
 
 
@@ -68,17 +70,21 @@ class Modal {
         var y = this.y + 50;
         ctx.fillText(this.title, x, y);
 
-        
 
 
-        let spacer = 0, textSpacer = 25;
-
-        ctx.font = "16px Helvetica";
 
         ctx.translate(this.x+20, this.y+80);
 
+        ctx.font = "bold 60px Helvetica";
+        
         ctx.beginPath();
-        ctx.fillText("Basic operation", 0, 0 + spacer++ * textSpacer);
+        ctx.fillText("🚀📦", this.width -200, 0 + spacer * textSpacer);
+        ctx.stroke();
+
+        ctx.font = "16px Helvetica";
+
+        ctx.beginPath();
+        ctx.fillText("Basic operation:", 0, 0 + spacer++ * textSpacer);
         ctx.stroke();
 
         spacer++;
