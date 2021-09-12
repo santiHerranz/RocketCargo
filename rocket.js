@@ -113,6 +113,12 @@ class Rocket extends Vehicle {
             this.velY = 0;
         }
 
+        if (this.status == "based") {
+            this.grounded = true;
+            this.velX = 0;
+            this.velY = 0;
+        }
+
 
         this.mass = this.dryMass + this.fuel;
 

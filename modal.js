@@ -4,7 +4,7 @@ class Modal {
     constructor(screen) {
 
         this.visible = false;
-        this.title = "";
+        this.title = "R O C K E T  C A R G O";
 
 
         this.color = "#282828";
@@ -69,12 +69,20 @@ class Modal {
         var y = this.y + 50;
         ctx.fillText(this.title, x, y);
 
+        
+
 
         let spacer = 0, textSpacer = 25;
 
         ctx.font = "16px Helvetica";
 
         ctx.translate(this.x+20, this.y+100);
+
+        ctx.beginPath();
+        ctx.fillText("Fly rockets, fly safe", 0, 0 + spacer++ * textSpacer);
+        ctx.stroke();
+
+        spacer++;
 
         ctx.beginPath();
         ctx.fillText("Press F to refuel the Rocket at base", 0, 0 + spacer++ * textSpacer);

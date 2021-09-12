@@ -6,7 +6,7 @@ class Game {
 
         this.screen = new Screen(window.innerWidth * 1, window.innerHeight * 1, ctx);
 
-        this.dificulty = 2;
+        this.dificulty = 1;
 
         this.stop = false;
         this.dt = 10 / 100;
@@ -19,6 +19,7 @@ class Game {
         this.fires = [];
         this.pieces = [];
         this.bases = [];
+        this.resources = [];
         
         this.rocket = null;
         this.lastRocketY = 0;
@@ -28,29 +29,37 @@ class Game {
 
         this.planeRespawn = true;
 
-        this.bases.push(new Resource("📦", this.respawnPos.x+400, groundPoint));
-        this.bases.push(new Resource("🍔", this.respawnPos.x+3500, groundPoint));
-        this.bases.push(new Resource("🧊", this.respawnPos.x+2200, groundPoint));
+        let rp = this.respawnPos.x;
 
+        this.resources.push(new Resource("🍔", "🏨", rp-1500, groundPoint));
+        this.resources.push(new Resource("🧊", "🏭", rp-2700, groundPoint));
+        this.resources.push(new Resource("💰", "🏦", rp-3400, groundPoint));
+        this.resources.push(new Resource("📦", "🏰", rp+400, groundPoint));
+        this.resources.push(new Resource("🎁", "🏠", rp+1500, groundPoint));
+        this.resources.push(new Resource("🧻", "🏬", rp+2200, groundPoint));
+        this.resources.push(new Resource("🩹", "🏥", rp+3600, groundPoint));
 
-        this.bases.push(new Base("👽", this.respawnPos.x-1000, groundPoint-1400));
-        // this.bases.push(new Base("🏦", this.respawnPos.x-1500, groundPoint));
-        this.bases.push(new Base("🛸", this.respawnPos.x+1500, groundPoint-1300));
-        // this.bases.push(new Base("🏰", this.respawnPos.x+1350, groundPoint));
-        this.bases.push(new Base("👾", this.respawnPos.x+3500, groundPoint-1250));
+        this.bases.push(new Base("👾", rp-2500, groundPoint-1100));
+        this.bases.push(new Base("👽", rp-1000, groundPoint-1100));
+        this.bases.push(new Base("🛸", rp+1500, groundPoint-1100));
+        this.bases.push(new Base("🛰️", rp+3500, groundPoint-1100));
 
-
-        let resourceList = ["📦","🍔"];
-        let customerList = ["👽","🛸","👾"]; //,"🏦","🏰"
 
         this.missionIndex = 0;
         this.missions = [];
 
+
+        // Mission random generator
         for (let index = 0; index < 50; index++) {
-            let r = resourceList[Math.floor(Math.random()*resourceList.length)];
-            let c = customerList[Math.floor(Math.random()*customerList.length)];
+            let r = this.resources[Math.floor(Math.random()*this.resources.length)].name;
+            let c = this.bases[Math.floor(Math.random()*this.bases.length)].name;
             this.missions.push({ path: [r,c]});
         }
+        this.missions = this.missions.sort((a, b) => {return 0.5 - Math.random()});
+
+        // First mission always is Package to Alien
+        this.missions.unshift({ path: ["📦","👽"]});
+
         this.mission = this.missions[this.missionIndex];
         this.missionCompleted = false;
 
@@ -81,6 +90,14 @@ class Game {
         this.fires = this.fires.filter(o => o.life > 0);
         
 
+        this.bases.forEach(base => {
+            base.animate = false;
+        });
+        this.resources.forEach(resource => {
+            resource.visible = false;
+        });
+
+
         this.checkMission();
 
 
@@ -103,10 +120,6 @@ class Game {
         this.pieces.forEach(o => o.step(dt));
 
 
-
-
-
-
         // Vertical Zoom with logic, no frustrum view
         let altitudePercent = (1 - this.rocket.altitude / this.rocket.altitudeMax);
 
@@ -123,38 +136,57 @@ class Game {
             base.step(dt);
         });
 
-        // Rocket can only fuel at base
-        if (this.bases.length > 0) {
+        // Rocket can fuel at base or at resource
+        let places = [];
+        this.bases.forEach(base => places.push(base));
+        this.resources.forEach(resource => places.push(resource));
+        if (places.length > 0) {
             this.rockets.forEach(rocket => {
                 rocket.canFuel = false;
 
-                let nearest = this.bases[0];
-                for (let index = 1; index < this.bases.length; index++) {
-                    if (this.bases[index].distance(rocket) < nearest.distance(rocket))
-                        nearest = this.bases[index];
+                let nearest = places[0];
+                for (let index = 1; index < places.length; index++) {
+                    if (places[index].distance(rocket) < nearest.distance(rocket))
+                        nearest = places[index];
                 }
 
                 if (nearest != null) {
                     rocket.canFuel = (nearest.distance(rocket) < nearest.radius* 2);
                     nearest.color = (rocket.canFuel ? nearest.colorActive : nearest.colorNormal);
+                }
 
-                    // Also can take away resouces
-                    if (rocket.canFuel && nearest.resource != null && (!rocket.loaded || rocket.load != nearest.resource )) {
+            });
+        }
+
+        // Rocket can take away the resource
+        if (this.resources.length > 0) {
+            this.rockets.forEach(rocket => {
+
+                let nearest = this.resources[0];
+                for (let index = 1; index < this.resources.length; index++) {
+                    if (this.resources[index].distance(rocket) < nearest.distance(rocket))
+                        nearest = this.resources[index];
+                }
+
+                if (nearest != null) {
+                    if ((nearest.distance(rocket) < nearest.radius*1.2) && (!rocket.loaded || rocket.load != nearest.resource) ) {
                         rocket.loaded = true;
-                        rocket.load = nearest.resource;
+                        rocket.load = nearest.name;
+                        nearest.visible = false;
                     }
                 }
 
             });
         }
 
+
+        // TODO improve
         this.rockets.forEach(rocket => {
             this.bases.forEach(base => {
-                if (this.collide(rocket, base) ){
+                if (rocket.velY > 0 && this.collide(rocket, base) ){
                     if (rocket.y > base.y-50)
                         rocket.y = base.y-50;
-                        rocket.velX *= 0.95
-                        rocket.velY *= 0.95
+                        rocket.status = "based";
                 }
             });
         });
@@ -169,11 +201,13 @@ class Game {
                 });
             });
 
-            this.planes.forEach(plane => {
-                if ( plane.x > this.rocket.x+1500  ) plane.life = 0;
-                if ( plane.x < this.rocket.x-1500 ) plane.life = 0;
-            });
+        // remove overview planes 
+        this.planes.forEach(plane => {
+            if ( plane.x > this.rocket.x+1500  ) plane.life = 0;
+            if ( plane.x < this.rocket.x-1500 ) plane.life = 0;
+        });
 
+        // Keep number of flying planes based on dificulty level
         if (this.planes.filter(o => o.life > 0).length < this.dificulty ) {
             this.newPlane();
         }        
@@ -193,7 +227,9 @@ class Game {
     draw(ctx) {
         ctx.clearRect(0, 0, cWidth, cHeight);
         this.screen.drawScene();
+        this.screen.drawTarget(ctx);
         this.bases.forEach(o => game.screen.drawItem(o));
+        this.resources.forEach(o => game.screen.drawItem(o));
         this.fires.forEach(o => game.screen.drawItem(o));
         this.pieces.forEach(o => game.screen.drawItem(o));
         this.rockets.forEach(o => game.screen.drawItem(o));
@@ -358,7 +394,6 @@ class Game {
 
 
     showHelp() {
-        this.screen.modal.title = "H E L P"
         this.screen.modal.visible = true;
         this.stop = true;
     }
@@ -366,8 +401,17 @@ class Game {
 
     checkMission() {
         if (this.mission) {
-            let base = this.bases.filter(base => base.name == this.mission.path[1])[0];
+            let resourceName = this.mission.path[0]
+            let resource = this.resources.filter(resource => resource.name == resourceName)[0];
+             if (resource != null) {
+                resource.visible = true;
+                resource.animate = true;     
+             }      
+             let baseName = this.mission.path[1];
+            let base = this.bases.filter(base => base.name == baseName)[0];
             if (base != null) {
+                base.visible = true;
+                base.animate = true;
                 this.mission.distanceToTarget = -50 + base.distance(this.rocket);
                 if (this.mission.distanceToTarget < 50 && this.rocket.loaded && this.rocket.life > 0 ) {
                     this.missionHasCompleted();
@@ -391,6 +435,7 @@ class Game {
         this.mission = this.missions[this.missionIndex];
         this.missionCompleted = false;
         this.rocket.loaded = false;
+        this.dificulty ++;
     }
 
 

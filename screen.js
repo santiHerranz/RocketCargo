@@ -30,7 +30,7 @@ class Screen {
         this.trees = [];
 
         this.createStars(-5 * cWidth, -1500, 10 * cWidth, groundPoint - 1000, 100);
-        this.createTrees(-5 * cWidth, groundPoint-10, 10 * cWidth, groundPoint-0, 100);
+        this.createTrees(-5 * cWidth, groundPoint - 10, 10 * cWidth, groundPoint - 0, 100);
     }
 
     createStars(xp, yp, width, height, spacing) {
@@ -87,6 +87,35 @@ class Screen {
 
     }
 
+    drawTarget(ctx) {
+        var rect = canvas.getBoundingClientRect();
+
+        ctx.save();
+        ctx.scale(this.scaleX, this.scaleY);
+        ctx.translate(this.x + this.offsetX - rect.left, this.y + this.offsetY - rect.top);
+
+        ctx.strokeStyle = "rgb(255,255,255,0.3)";
+        ctx.setLineDash([20, 20]);
+        ctx.lineWidth = 12;
+
+        let resource = game.resources
+            .filter(resource => { return resource.name == game.mission.path[0] })[0];
+
+        if (resource) {
+            game.bases
+                .filter(base => { return base.name == game.mission.path[1] })
+                .forEach(base => {
+                    ctx.beginPath();
+                    ctx.moveTo(resource.x, resource.y);
+                    ctx.lineTo(base.x, base.y);
+                    ctx.stroke();
+                });
+        }
+
+        ctx.restore();
+
+
+    }
 
 
     drawItem(item) {
@@ -155,84 +184,45 @@ class Screen {
 
 
 
-        ctx.save();
-        ctx.beginPath();
-        ctx.font = "32px Helvetica";
-        ctx.fillStyle = "white";
-        ctx.fillText("Rocket Cargo", 100, 100);
-        ctx.stroke();
-        ctx.fillStyle = "black";
-        ctx.fillText("Rocket Cargo", 100 + 2, 100 + 2);
-        ctx.stroke();
+        let spacer = 0, textSpacer = 30;
 
-        let spacer = 0, textSpacer = 25;
 
-        ctx.font = "18px Helvetica";
-        ctx.fillStyle = "white";
-        ctx.beginPath();
-        ctx.fillText("Fly rockets, fly safe", 100, 130 + spacer * textSpacer);
-        ctx.stroke();
-        ctx.fillStyle = "black";
-        ctx.beginPath();
-        ctx.fillText("Fly rockets, fly safe", 100 + 2, 130 + 2 + spacer++ * textSpacer);
-        ctx.stroke();
-
-        // ctx.font = "24px Helvetica";
-        // ctx.fillStyle = "black";
-        // ctx.beginPath();
-        // ctx.fillText("Press F to refuel the Rocket at base", 100, 150 + spacer++ * textSpacer);
-        // ctx.stroke();
-        // ctx.beginPath();
-        // ctx.fillText("Press W or UP to thrust the rocket", 100, 150 + spacer++ * textSpacer);
-        // ctx.stroke();
-        // ctx.beginPath();
-        // ctx.fillText("Press A/D or LEFT/RIGHT to move the rocket when flying", 100, 150 + spacer++ * textSpacer);
-        // ctx.stroke();
-        // ctx.beginPath();
-        // ctx.fillText("Press Q to activate FTS (Flight Termination System)", 100, 150 + spacer++ * textSpacer);
-        // ctx.stroke();
 
         if (game.mission) {
 
-        ctx.font = "24px Helvetica";
-        ctx.fillStyle = "black";
+            let rx = 50; //cWidth - 600;
+            let ry = cHeight - 150;
 
-            let rx = cWidth - 600;
-            let ry = cHeight - 120;
-            ctx.fillText("Mission " + (game.missionIndex + 1) + ":", rx , ry + spacer++ * textSpacer);
+            ctx.beginPath();
+            ctx.fillStyle = "rgb(255,255,255,0.3)";
+//            ctx.fillRect(rx - 30, ry - 50, 450, 180, 20);
+            ctx.roundRect(rx - 30, ry - 50, 450, 180, 20);
+            ctx.fill();
+            
+
+
+            ctx.fillStyle = "black";
+            ctx.font = "28px Helvetica";
+
+            ctx.beginPath();
+            ctx.fillText("Mission " + (game.missionIndex + 1) + ":", rx, ry + spacer++ * textSpacer);
             ctx.stroke();
-            ctx.fillText("Carry " + game.mission.path[0] + " to base " + game.mission.path[1], rx, ry + spacer++ * textSpacer);
+
+            spacer++
+
+            ctx.font = "36px Helvetica";
+            ctx.beginPath();
+            ctx.fillText("Carry " + game.mission.path[0] + " to base " + game.mission.path[1], rx + 20, ry + spacer++ * textSpacer);
             ctx.stroke();
 
             if (game.mission.distanceToTarget) {
-                ctx.fillText("Distance to target " + game.mission.distanceToTarget.toFixed(0) + " units ", rx, ry + spacer++ * textSpacer);
+                ctx.font = "20px Helvetica";
+                ctx.beginPath();
+                ctx.fillText("Distance to target " + game.mission.distanceToTarget.toFixed(0) + " units ", rx + 20, ry + spacer++ * textSpacer);
                 ctx.stroke();
             }
         }
 
-        // if (game.rocket) {
-        //     ctx.beginPath();
-        //     ctx.font = "16px Helvetica";
-        //     ctx.fillStyle = "Blue";
-
-        //     // ctx.fillText("Screen: [" + game.screen.x.toFixed(1) + "," + game.screen.y.toFixed(1) + "] [" + game.screen.scaleX.toFixed(3) + "," + game.screen.scaleY.toFixed(3) + "]", 100, 250 + spacer++ * textSpacer);
-        //     // ctx.stroke();
-        //     ctx.fillText("Mouse: " + mousePosition.x.toFixed(1) + " " + mousePosition.y.toFixed(1), 100, 250 + spacer++ * textSpacer);
-        //     ctx.stroke();
-        //     ctx.fillText("Ship: " + game.rocket.name, 100, 250 + spacer++ * textSpacer);
-        //     ctx.stroke();
-        //     ctx.fillText("Distance: " + (game.rocket.distanceTavelled).toFixed(1), 100, 250 + spacer++ * textSpacer);
-        //     ctx.stroke();
-        //     ctx.fillText("Altitude: " + game.rocket.altitude.toFixed(0) + "/" + game.rocket.altitudeMax.toFixed(0), 100, 250 + spacer++ * textSpacer);
-        //     ctx.stroke();
-        //     ctx.fillText("Mass: " + game.rocket.mass.toFixed(1), 100, 250 + spacer++ * textSpacer);
-        //     ctx.stroke();
-        //     ctx.fillText("Vertical velocity: " + game.rocket.velY.toFixed(1), 100, 250 + spacer++ * textSpacer);
-        //     ctx.stroke();
-        //     ctx.fillText("Horizontal velocity: " + game.rocket.velX.toFixed(1), 100, 250 + spacer++ * textSpacer);
-        //     ctx.stroke();
-
-        // }
 
         ctx.restore();
 
