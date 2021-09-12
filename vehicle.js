@@ -86,6 +86,7 @@ class Vehicle {
             this.exploding();
             this.life = 0;
             this.hasExploded = true;
+
         }
 
     }

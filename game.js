@@ -345,7 +345,7 @@ class Game {
     exploding(vehicle) {
 
         if (game.soundExplosion.paused)
-            wgame.soundExplosion.play(); 
+            game.soundExplosion.play(); 
 
         let explodePos = vehicle.explodePosition();
         let smokeSize = 3;
