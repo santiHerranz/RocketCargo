@@ -75,13 +75,9 @@ class Game {
 
         this.newRocket(this.respawnPos);
 
-        // setTimeout(() => {
-        //     this.showHelp();
-        // },100);
-
-
-        // LOAD SOUNDS
-        this.soundExplosion = document.getElementById("audio_explosion"); 
+        setTimeout(() => {
+            this.showHelp();
+        },100);
 
     }
 
@@ -344,8 +340,7 @@ class Game {
 
     exploding(vehicle) {
 
-        if (game.soundExplosion.paused)
-            game.soundExplosion.play(); 
+        // Here it goes the sound of a big explosion
 
         let explodePos = vehicle.explodePosition();
         let smokeSize = 3;
