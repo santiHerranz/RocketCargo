@@ -24,7 +24,7 @@ class Rocket extends Vehicle {
         this.thrust = { x: 0, y: 0 };
         this.thrusting = false;
 
-        this.fuel_MAX = 5000;
+        this.fuel_MAX = 4000;
         this.fuel = this.fuel_MAX * 2 / 3;
         this.grounded = true;
         this.canFuel = false;
@@ -38,11 +38,8 @@ class Rocket extends Vehicle {
         this.Width = 20;
         this.Length = 40;
 
-        this.dryMass = 200;
-        this.mass = this.dryMass;
-
-        this.side = 4; //32; //16; //8; //
-
+        // Explode in 8x8 pieces
+        this.side = 8;
 
     }
 
@@ -120,8 +117,6 @@ class Rocket extends Vehicle {
         }
 
 
-        this.mass = this.dryMass + this.fuel;
-
         this.lastStatus = this.status;
 
     }
@@ -180,7 +175,7 @@ class Rocket extends Vehicle {
 
     drawExhaustPlume(ship) {
 
-        const SHIP_SIZE = 20; // ship height in pixels
+        const SHIP_SIZE = 30; // ship height in pixels
 
         ctx.fillStyle = "red";
         ctx.strokeStyle = "yellow";
@@ -193,8 +188,9 @@ class Rocket extends Vehicle {
 
         var radians = ship.thrustAngle;
 
-        var x = ship.x + Math.cos(radians - Math.PI * 2) * ship.r;
-        var y = ship.y + this.Length * 1.2 + Math.sin(radians - Math.PI * 2) * ship.r;
+        let plumeLength =  0.5*(ship.radius*4/5 + ship.radius*1/5 *Math.random());
+        var x = 0 + Math.cos(radians - Math.PI * 2) * plumeLength;
+        var y = 0 + this.Length + Math.sin(radians - Math.PI * 2) * plumeLength;
 
         flamex[1] = x + Math.cos(radians - Math.PI * 2) * SIZE * 4;
         flamey[1] = y + Math.sin(radians - Math.PI * 2) * SIZE * 4;
@@ -208,6 +204,8 @@ class Rocket extends Vehicle {
         flamex[4] = x + Math.cos(radians + Math.PI * 7 / 4) * SIZE;
         flamey[4] = y + Math.sin(radians + Math.PI * 7 / 4) * SIZE;
 
+        ctx.save();
+        ctx.translate(this.x, this.y+10);
 
         // draw flame
         ctx.beginPath();
@@ -220,6 +218,8 @@ class Rocket extends Vehicle {
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
+
+        ctx.restore();
     }
 
 

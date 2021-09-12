@@ -1,13 +1,13 @@
 /**
  * smoke Particle Mass
  */
-var SmokeParticle = function (x, y, v, r = 1, mass = 1) {
+var SmokeParticle = function (x, y, v, r = 1, mass = 0.001) {
 
     this.name = Math.random().toString(36).substr(2, 9);
 
     var smokeColors = ['rgba(255,255,255,0.2)', 'rgba(200,200,200,0.2)', 'rgba(230,230,230,0.2)'];
 
-    v = v || { x: 1, y: 3 }
+    v = v || { x: 0, y: 0 }
 
     this.x = x;
     this.y = y;
@@ -24,7 +24,7 @@ var SmokeParticle = function (x, y, v, r = 1, mass = 1) {
 
 SmokeParticle.prototype.step = function (dt) {
 
-    this.vy += gravity * 0.1 * this.mass;
+    this.vy += gravity * this.mass;
 
     this.vx += game.wind.x;
     this.vy += game.wind.y;
@@ -33,8 +33,10 @@ SmokeParticle.prototype.step = function (dt) {
     this.x += dt * this.vx;
     this.y += dt * this.vy;
 
-    if (this.y > groundPoint)
-        this.y = groundPoint + 20;
+    if (this.y > groundPoint) {
+         this.y = groundPoint;
+         this.vy *= -1;
+    }
 
     this.life -= 1;
 

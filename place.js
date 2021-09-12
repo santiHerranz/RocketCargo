@@ -8,7 +8,6 @@ class Place {
 		this.color = this.colorNormal
 
 		this.visible = true;
-		this.animate = false;
 
 		this.x = x;
 		this.y = y;
@@ -16,15 +15,11 @@ class Place {
         this.width = 2*this.radius;
         this.height = 2*this.radius;
 
-
 		this.type = (y == groundPoint ? Place.TYPE.GROUND : Place.TYPE.SPACE);
 		this.emojiSize = size;
 	}
 
 	step(dt) {
-
-
-
 	}
 
 	draw() {

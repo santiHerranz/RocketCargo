@@ -59,7 +59,6 @@ class Modal {
         ctx.fill();
         ctx.stroke();
 
-        var halfH = this.height / 2;
 
         // text
         ctx.font = '22px sans-serif';
@@ -76,10 +75,10 @@ class Modal {
 
         ctx.font = "16px Helvetica";
 
-        ctx.translate(this.x+20, this.y+100);
+        ctx.translate(this.x+20, this.y+80);
 
         ctx.beginPath();
-        ctx.fillText("Fly rockets, fly safe", 0, 0 + spacer++ * textSpacer);
+        ctx.fillText("Basic operation", 0, 0 + spacer++ * textSpacer);
         ctx.stroke();
 
         spacer++;
@@ -94,7 +93,10 @@ class Modal {
         ctx.fillText("Press A/D or LEFT/RIGHT to move the rocket when flying", 0, 0 + spacer++ * textSpacer);
         ctx.stroke();
         ctx.beginPath();
-        ctx.fillText("Press Q to activate FTS (Flight Termination System)", 0, 0 + spacer++ * textSpacer);
+        ctx.fillText("Press Q to activate FTS (Flight Termination System) if you run out of fuel", 0, 0 + spacer++ * textSpacer);
+        ctx.stroke();        
+        ctx.beginPath();
+        ctx.fillText("Press H to show this info", 0, 0 + spacer++ * textSpacer);
         ctx.stroke();        
 
         ctx.restore();
@@ -111,7 +113,6 @@ class Modal {
 
 
 class Button {
-
 
     constructor(x, y, w, h, text, colors, clickCB, hud) {
 

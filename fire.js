@@ -1,8 +1,7 @@
 
-
 function Fire(x, y, v) {
 
-  v = v || { x: 1, y: 3 }
+  v = v || { x: 0, y: 3 } // fire ball falling
 
   this.x = x;
   this.y = y;
@@ -15,7 +14,7 @@ function Fire(x, y, v) {
   this.life = this.lifeMax;
 
   this.max = 50;
-  this.speed = 0.5;
+  this.speed = 1.5;
   this.size = 20;
 
   this.fireWidth = 50;

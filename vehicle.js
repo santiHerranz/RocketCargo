@@ -28,9 +28,6 @@ class Vehicle {
 
         this.listeners = [];
 
-
-
-
         let model = vehicleModels[modelIndex];
 
         this.name = model.name;

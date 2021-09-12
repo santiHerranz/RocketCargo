@@ -18,8 +18,8 @@ class Plane extends Vehicle {
         this.Width = 108;
         this.Length = 32;
 
-        this.side = 4; //32; //16; //8; //
-
+        // Explode in 8x8 pieces
+        this.side = 8;
     }
 
     draw(ctx) {
