@@ -1,5 +1,10 @@
 # Rocket Cargo
 
+![screenshot](./screenshot.png)
+
+[Demo online](https://santiherranz.github.io/RocketCargo/)
+
+
 # Basic operation 
 - Press F to refuel the Rocket at fuel pump
 - Press W or UP to thrust the rocket
