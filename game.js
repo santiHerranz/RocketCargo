@@ -75,9 +75,9 @@ class Game {
 
         this.newRocket(this.respawnPos);
 
-        setTimeout(() => {
-            this.showHelp();
-        },100);
+        // setTimeout(() => {
+        //     this.showHelp();
+        // },100);
 
     }
 
@@ -357,25 +357,6 @@ class Game {
             let vel = { x: (Math.random() - 0.5) * 15, y: (Math.random() - 0.5) * 15 };
             this.smoke.push(new SmokeParticle(explodePos.x, explodePos.y, vel, smokeSize, smokeMass));
         }
-
-        // Break in a thousand pieces
-        for (let y = 0; y < vehicle.side; y++) {
-            for (let x = 0; x < vehicle.side; x++) {
-
-                let img = new Image();
-                img.src = vehicle.imageData;
-                let pos = { x: explodePos.x, y: explodePos.y };
-                let index = x + y * vehicle.side;
-
-                let pieceSpeedX = 2.0 * (x * vehicle.w - vehicle.Width) + 50 * (Math.random() - 0.5);
-                let pieceSpeedY = 0.5 * (y * vehicle.h - vehicle.Length) + 50 * (Math.random() - 0.5);
-                let rotation = 360 * (Math.random() - 0.5) * 2 * Math.PI / 360;
-
-                this.pieces.push(new Piece(img, pos, { w: vehicle.w, h: vehicle.h }, index, { x: pieceSpeedX, y: pieceSpeedY, r: rotation }, vehicle.side));
-
-            }
-        }
-
 
     }
 

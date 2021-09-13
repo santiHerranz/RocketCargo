@@ -28,26 +28,16 @@ class Vehicle {
 
         this.listeners = [];
 
-        let model = vehicleModels[modelIndex];
 
-        this.name = model.name;
-        this.imageData = model.imageData;
-        this.imageWidth = model.width;
-        this.imageHeight = model.height;
-        this.fuelTank = model.tank;
-        this.smokePosition = model.smoke;
-
-        this.img = new Image();
-        this.img.src = this.imageData;
+        this.name = "";
+        this.imageWidth = 60;
+        this.imageHeight = 60;
+        this.smokePosition = {x:0,y:10};
 
 
         this.Width = 20;
         this.Length = 40;
 
-        this.side = 8; //4; //32; //16; //
-
-        this.w = this.imageWidth / this.side; //this.Width / this.side;
-        this.h = this.imageHeight / this.side; //this.Length / this.side;
 
 
     }
@@ -66,13 +56,13 @@ class Vehicle {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // ctx.beginPath(),
-        // ctx.arc(0,0,this.radius,0,Math.PI*2);
-        // ctx.stroke();
-        // ctx.closePath();
+        ctx.beginPath(),
+        ctx.arc(0,0,this.radius,0,Math.PI*2);
+        ctx.stroke();
+        ctx.closePath();
 
-        // ctx.rect(-this.width/2, -this.height/2, this.width, this.height);
-        // ctx.stroke();
+        ctx.rect(-this.width/2, -this.height/2, this.width, this.height);
+        ctx.stroke();
 
 
         ctx.restore();

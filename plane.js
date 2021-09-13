@@ -9,17 +9,9 @@ class Plane extends Vehicle {
         this.velX = vel.x;
         this.velY = vel.y;
 
-        let model = vehicleModels[1];
-
-        this.imageData = model.imageData;
-        this.imageWidth = model.width;
-        this.imageHeight = model.height;
-
         this.Width = 108;
         this.Length = 32;
 
-        // Explode in 8x8 pieces
-        this.side = 8;
     }
 
     draw(ctx) {
@@ -32,8 +24,17 @@ class Plane extends Vehicle {
         if (this.velX > 0)
             ctx.scale(-1, 1)
 
-        ctx.beginPath();
-        ctx.drawImage(this.img, 0 - this.Width/2, 0-this.Length/2, this.Width, this.Length);
+//        ctx.beginPath();
+//        ctx.drawImage(this.img, 0 - this.Width/2, 0-this.Length/2, this.Width, this.Length);
+
+        ctx.rotate(Math.PI/4*5);
+        ctx.font = "bold 80px Verdana";
+		ctx.textAlign = "left";
+		ctx.fillStyle = "#000000";
+		ctx.beginPath();
+		ctx.fillText("✈️", 0 , 0);
+        ctx.stroke();
+
 
         ctx.restore();
     }

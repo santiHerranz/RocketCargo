@@ -24,6 +24,8 @@ class Rocket extends Vehicle {
         this.thrust = { x: 0, y: 0 };
         this.thrusting = false;
 
+        this.fuelTank = { x: 15, y: -30, w: 7, h: 52, color: 'red' };
+
         this.fuel_MAX = 4000;
         this.fuel = this.fuel_MAX * 2 / 3;
         this.grounded = true;
@@ -130,7 +132,23 @@ class Rocket extends Vehicle {
         if (this.thrusting)
             this.drawExhaustPlume(this);
 
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(-Math.PI/4);
+
+        ctx.font = "bold 64px Verdana";
+		ctx.textAlign = "left";
+		ctx.fillStyle = "#000000";
+		ctx.beginPath();
+		ctx.fillText("🚀", -35 , 25);
+        ctx.stroke();
+
+        ctx.restore();
+
         this.drawRocket(ctx);
+
+
     }
 
 
@@ -144,8 +162,6 @@ class Rocket extends Vehicle {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        ctx.beginPath();
-        ctx.drawImage(this.img, 0 - this.Width * 2, 0, this.Width * 4, this.Length * 2);
 
         ctx.lineWidth = L / 40;
         ctx.lineJoin = 'round';
