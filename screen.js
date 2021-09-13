@@ -21,7 +21,6 @@ class Screen {
         this.y = (cHeight - this.height) / 2;
         this.y_original = this.y;
 
-        this.parallax = new Parallax();
 
         this.modal = new Modal(this);
         this.minimap = new MiniMap(this, 225, 150);
@@ -64,7 +63,6 @@ class Screen {
 
 
     update(dt) {
-        this.parallax.update(dt);
         this.modal.step(dt);
         this.minimap.step(dt);
 
@@ -157,7 +155,6 @@ class Screen {
             ctx.fillText("🌳", tree.x, tree.y);
         });
 
-        this.parallax.draw(ctx);
 
 
         // ground

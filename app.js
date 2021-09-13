@@ -15,7 +15,6 @@ var dt = 20 / 100;
 
 var groundPoint = cHeight - (cHeight / 10);
 
-var parallaxSpeed = { x: 0 };
 
 var game = new Game(cWidth / 2, groundPoint - 600);
 

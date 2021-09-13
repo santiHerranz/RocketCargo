@@ -32,7 +32,7 @@ class Plane extends Vehicle {
 		ctx.textAlign = "left";
 		ctx.fillStyle = "#000000";
 		ctx.beginPath();
-		ctx.fillText("✈️", 0 , 0);
+		ctx.fillText("✈️", -85 , 60);
         ctx.stroke();
 
 

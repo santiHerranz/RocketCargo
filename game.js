@@ -75,9 +75,9 @@ class Game {
 
         this.newRocket(this.respawnPos);
 
-        // setTimeout(() => {
-        //     this.showHelp();
-        // },100);
+        setTimeout(() => {
+            this.showHelp();
+        },100);
 
     }
 
@@ -321,7 +321,7 @@ class Game {
 
     }
 
-    smoking(emitter, count = 4) {
+    smoking(emitter, count = 8) {
 
         if (randNum(1, 3) == 1) return;
 
@@ -354,7 +354,7 @@ class Game {
         // A lot of dense smoke falling down
         for (let i = 0; i < 100; i++) {
             explodePos = { x: explodePos.x, y: explodePos.y };
-            let vel = { x: (Math.random() - 0.5) * 15, y: (Math.random() - 0.5) * 15 };
+            let vel = { x: (Math.random() - 0.5) * 25, y: (Math.random() - 0.5) * 25 };
             this.smoke.push(new SmokeParticle(explodePos.x, explodePos.y, vel, smokeSize, smokeMass));
         }
 

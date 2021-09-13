@@ -56,13 +56,13 @@ class Vehicle {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        ctx.beginPath(),
-        ctx.arc(0,0,this.radius,0,Math.PI*2);
-        ctx.stroke();
-        ctx.closePath();
-
-        ctx.rect(-this.width/2, -this.height/2, this.width, this.height);
-        ctx.stroke();
+        // ctx.beginPath(),
+        // ctx.arc(0,0,this.radius,0,Math.PI*2);
+        // ctx.stroke();
+        // ctx.closePath();
+        //
+        // ctx.rect(-this.width/2, -this.height/2, this.width, this.height);
+        // ctx.stroke();
 
 
         ctx.restore();

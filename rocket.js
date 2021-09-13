@@ -24,7 +24,7 @@ class Rocket extends Vehicle {
         this.thrust = { x: 0, y: 0 };
         this.thrusting = false;
 
-        this.fuelTank = { x: 15, y: -30, w: 7, h: 52, color: 'red' };
+        this.fuelTank = { x: 60, y: -10, w: 7, h: 52, color: 'red' };
 
         this.fuel_MAX = 4000;
         this.fuel = this.fuel_MAX * 2 / 3;
@@ -141,7 +141,7 @@ class Rocket extends Vehicle {
 		ctx.textAlign = "left";
 		ctx.fillStyle = "#000000";
 		ctx.beginPath();
-		ctx.fillText("🚀", -35 , 25);
+		ctx.fillText("🚀", -45 , 25);
         ctx.stroke();
 
         ctx.restore();
@@ -170,10 +170,12 @@ class Rocket extends Vehicle {
         // Fuel tank
         let tankWidth = this.fuelTank.w; //W / 4;
         let tankHeigth = this.fuelTank.h; //L * 2 / 4;
-        ctx.fillStyle = this.fuelTank.color;  //"rgba(206,135,235,0.6)";
         ctx.beginPath();
+        ctx.fillStyle = "rgba(255,255,255,0.4)";
+        ctx.fillRect(this.fuelTank.x - tankWidth * 2, this.fuelTank.y - L / 2, tankWidth, tankHeigth);
+        ctx.fillStyle = this.fuelTank.color;  //"rgba(206,135,235,0.6)";
         ctx.fillRect(this.fuelTank.x - tankWidth * 2, this.fuelTank.y - L / 2 + tankHeigth * (1 - (this.fuel / this.fuel_MAX)), tankWidth, tankHeigth * (this.fuel / this.fuel_MAX));
-        ctx.strokeStyle = "rgba(0,0,0,0.2)";
+        ctx.strokeStyle = "rgba(0,0,0,0.4)";
         ctx.strokeRect(this.fuelTank.x - tankWidth * 2, this.fuelTank.y - L / 2, tankWidth, tankHeigth);
         ctx.restore();
 
@@ -183,7 +185,7 @@ class Rocket extends Vehicle {
             ctx.textAlign = "center";
             ctx.fillStyle = "#000000";
             ctx.beginPath();
-            ctx.fillText(this.load, this.x , this.y-10);
+            ctx.fillText(this.load, this.x , this.y-50);
             ctx.restore();
         }
 
