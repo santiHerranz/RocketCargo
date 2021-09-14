@@ -6,7 +6,7 @@
  </p>
   <br>
 <p align="left">  
-  <b>Rocket Cargo</b> is a order delivery game with a rocket.
+  <b>Rocket Cargo</b> is an order delivery game with a rocket.
 
   Inspired by the famous SpaceX first prototype for Mars: <a href="https://www.spacex.com/vehicles/starship/" target="_blank"><b>Starhopper</b></a>
 
@@ -18,7 +18,7 @@
   <br>
 - Press A/D or LEFT/RIGHT to move the rocket when flying
   <br>
-- Press Q to activate FTS (Flight Termination System)
+- Press Q to activate FTS (Flight Termination System) if you run out of fuel
   <br>
   <br>
   <h2>Tips</h2>
