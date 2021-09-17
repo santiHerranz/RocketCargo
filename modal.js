@@ -44,6 +44,8 @@ class Modal {
         this.buttons.forEach(button => button.step(dt));
     }
 
+
+
     draw(ctx) {
 
         if (!this.visible) return;
@@ -117,6 +119,92 @@ class Modal {
 
 }
 
+
+class GameOver {
+
+    constructor(screen) {
+
+        this.visible = false;
+        this.title = "G A M E  O V E R";
+
+
+        this.color = "#282828";
+        this.width = 600;
+        this.height = 300;
+
+        this.x = screen.width / 2 - this.width / 2;
+        this.y = screen.height / 2 - this.height / 2;
+
+        this.buttons = [];
+
+        var bStyle = {
+            'default': {
+                top: '#1879BD',
+                bottom: '#084D79'
+            },
+            'hover': {
+                top: '#678834',
+                bottom: '#093905'
+            },
+            'active': {
+                top: '#EB7723',
+                bottom: '#A80000'
+            }
+        };
+
+        var a = new Button(this.x + this.width / 2 - 150 / 2, this.y + this.height * 0.8, 150, 20, 'New Game', bStyle
+            , function () {
+                if (!game.screen.gameover.visible) return;
+                game.screen.gameover.visible = false;
+                game.init();
+            });
+        this.buttons.push(a);
+    }
+
+    step(dt) {
+        this.buttons.forEach(button => button.step(dt));
+    }
+
+
+
+    draw(ctx) {
+
+        
+        if (!this.visible) return;
+
+        let spacer = 0, textSpacer = 25;
+
+        ctx.save();
+
+
+        ctx.beginPath();
+        ctx.rect(this.x, this.y, this.width, this.height);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "#fff";
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.stroke();
+
+
+        // text
+        ctx.font = '22px sans-serif';
+        ctx.fillStyle = '#FFF';
+        var size = ctx.measureText(this.title);
+        var x = this.x + this.width / 2 - size.width / 2;
+        var y = this.y + 50;
+        ctx.fillText(this.title, x, y);
+
+        ctx.restore();
+
+
+        this.buttons.forEach(button => button.draw(ctx));
+    }
+
+
+
+
+
+}
 
 class Button {
 

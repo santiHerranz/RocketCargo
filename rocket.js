@@ -99,6 +99,7 @@ class Rocket extends Vehicle {
             if (this.velY > this.landingConstraints.dy || this.velX > this.landingConstraints.dx) {
                 this.exploding();
                 this.life = 0;
+                this.hasExploded = true;
             } else {
                 this.status = "landed";
                 this.grounded = true;
@@ -122,8 +123,6 @@ class Rocket extends Vehicle {
         this.lastStatus = this.status;
 
     }
-
-
 
 
     draw(ctx) {
@@ -257,7 +256,10 @@ class Rocket extends Vehicle {
     }
     refuelRocket() {
         if (this.fuel < this.fuel_MAX && this.canFuel) {
-            this.fuel += this.fuel_MAX / 100;
+            if (game.score > 0) {
+                this.fuel += this.fuel_MAX / 100;
+                game.score -= this.fuel_MAX / 100;
+            }
         }
     }
 

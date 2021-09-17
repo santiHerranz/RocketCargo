@@ -1,19 +1,24 @@
 class Game {
     constructor(x, y) {
 
+        this.stop = true;
+        this.debug = false;
+
         this.x = x;
         this.y = y;
 
         this.rocketRespawn = true;
-        this.respawnPos = { x: cWidth * 1 / 2, y: groundPoint };
+        this.respawnPos = {
+            x: cWidth * 1 / 2,
+            y: groundPoint
+        };
 
         this.screen = new Screen(window.innerWidth * 1, window.innerHeight * 1, ctx);
 
-        this.dificulty = 1;
-
-        this.stop = false;
-
-        this.wind = { x: 0, y: 0 };
+        this.wind = {
+            x: 0,
+            y: 0
+        };
 
         this.planes = [];
         this.rockets = [];
@@ -22,15 +27,46 @@ class Game {
         this.pieces = [];
         this.bases = [];
         this.resources = [];
+        this.labels = [];
+
+        this.dificulty = 1;
+        this.lives = 3;
+        this.highScore = 0;
+        this.score = 0;
+
 
         this.rocket = null;
         this.lastRocketY = 0;
 
-
         this.planeRespawn = true;
 
-        let rp = this.respawnPos.x;
+        setTimeout(() => {
+            this.showHelp();
+        },100);
 
+        this.init();
+    }
+
+    init() {
+
+        this.planes = [];
+        this.rockets = [];
+        this.smoke = [];
+        this.fires = [];
+        this.pieces = [];
+        this.bases = [];
+        this.resources = [];
+        this.labels = [];
+
+        this.rocket = null;
+        this.lastRocketY = 0;
+
+        this.dificulty = 1;
+        this.lives = 3;
+        this.highScore = 0;
+        this.score = 0;
+
+        let rp = this.respawnPos.x;
 
         this.resources.push(new Resource("🍔", "🏨", rp - 1500, groundPoint));
         this.resources.push(new Resource("🧊", "🏭", rp - 2700, groundPoint));
@@ -45,7 +81,6 @@ class Game {
         this.bases.push(new Base("🛸", rp + 1500, groundPoint - 1100));
         this.bases.push(new Base("🛰️", rp + 3500, groundPoint - 1100));
 
-
         this.missionIndex = 0;
         this.missions = [];
 
@@ -56,28 +91,28 @@ class Game {
             let r = this.resources[Math.floor(Math.random() * this.resources.length)].name;
             let c = this.bases[Math.floor(Math.random() * this.bases.length)].name;
             if (c.name != '⛽' && lastResource != r && lastCustomer != c) {
-                this.missions.push({ path: [r, c] });
+                this.missions.push({
+                    path: [r, c],
+                    reward: 1000
+                });
                 lastResource = r;
                 lastCustomer = c;
             }
         }
-        //this.missions = this.missions.sort((a, b) => { return 0.5 - Math.random() });
 
-        // First mission always is Package to Alien
-        //this.missions.unshift({ path: ["📦", "👽"] });
 
         this.mission = this.missions[this.missionIndex];
         this.missionCompleted = false;
 
         // Fuel pumps
-        this.bases.push(new Base("⛽", rp-300, groundPoint, 100));
+        this.bases.push(new Base("⛽", rp - 300, groundPoint, 100));
         this.bases.push(new Base("⛽", rp + 2900, groundPoint, 100));
 
         this.newRocket(this.respawnPos);
 
-        setTimeout(() => {
-            this.showHelp();
-        },100);
+
+
+        this.stop = false;
 
     }
 
@@ -87,10 +122,12 @@ class Game {
 
     step(dt) {
 
+
+
         this.screen.update(dt);
 
-        if (this.stop) return;
-
+        if (this.stop)
+            return;
 
         // remove death stuff
         this.smoke = this.smoke.filter(o => o.life > 0);
@@ -98,24 +135,24 @@ class Game {
         this.planes = this.planes.filter(o => o.life > 0);
         this.pieces = this.pieces.filter(o => o.life > 0);
         this.fires = this.fires.filter(o => o.life > 0);
-
-
+        this.labels = this.labels.filter(o => o.life > 0);
 
         this.resources
-            .filter(res => { return res.building == "⛽" })
-            .forEach(resource => {
-                resource.visible = false;
-            });
-
+        // .filter(res => {
+        //     return res.building == "⛽"
+        // })
+        .forEach(resource => {
+            resource.visible = false;
+        });
 
         this.checkMissionStatus();
-
 
         this.fires.forEach(o => o.step(dt));
         this.rockets.forEach(o => o.step(dt));
         this.planes.forEach(o => o.step(dt));
         this.smoke.forEach(o => o.step(dt));
         this.pieces.forEach(o => o.step(dt));
+        this.labels.forEach(o => o.step(dt));
 
         // Smoke self Interaction - (poor performace)
         // let force = { x: 0.001, y: 0.0005 };
@@ -145,8 +182,8 @@ class Game {
         // Rocket can fuel only at fuel pump base
         let fuelPump = [];
         this.bases
-            .filter(base => base.name == "⛽")
-            .forEach(base => fuelPump.push(base));
+        .filter(base => base.name == "⛽")
+        .forEach(base => fuelPump.push(base));
 
         if (fuelPump.length > 0) {
             this.rockets.forEach(rocket => {
@@ -198,7 +235,6 @@ class Game {
                         resource.color = resource.colorNormal;
                     }
 
-
                 }
 
             });
@@ -215,18 +251,20 @@ class Game {
 
         this.planes.forEach(plane => {
             this.rockets
-                .forEach(rocket => {
-                    if (this.collide(plane, rocket)) {
-                        rocket.destroyVehicle();
-                        plane.destroyVehicle();
-                    }
-                });
+            .forEach(rocket => {
+                if (this.collide(plane, rocket)) {
+                    rocket.destroyVehicle();
+                    plane.destroyVehicle();
+                }
+            });
         });
 
-        // remove out of view planes 
+        // remove out of view planes
         this.planes.forEach(plane => {
-            if (plane.x > this.rocket.x + 1500) plane.life = 0;
-            if (plane.x < this.rocket.x - 1500) plane.life = 0;
+            if (plane.x > this.rocket.x + 1500)
+                plane.life = 0;
+            if (plane.x < this.rocket.x - 1500)
+                plane.life = 0;
         });
 
         // Keep number of flying planes based on dificulty level
@@ -234,14 +272,22 @@ class Game {
             this.newPlane();
         }
 
-
-        // Rocket Respawn
+        // Rocket Respawn or game Over
         if (this.rocketRespawn && this.rockets.filter(rocket => rocket.life > 0) == 0) {
-            setTimeout(() => {
-                this.newRocket(this.respawnPos);
-                this.rocketRespawn = true;
-            }, 4000);
-            this.rocketRespawn = false;
+
+            if (this.lives-1 > 0) {
+                setTimeout(() => {
+                    this.newRocket(this.respawnPos);
+                    this.rocketRespawn = true;
+                    this.lives -= 1;
+                }, 3500);
+                this.rocketRespawn = false;
+            } else {
+                setTimeout(() => {
+                    this.showGameOver();
+                }, 2000);
+            }
+
         }
 
     }
@@ -257,9 +303,12 @@ class Game {
         this.rockets.forEach(o => game.screen.drawItem(o));
         this.planes.forEach(o => game.screen.drawItem(o));
         this.smoke.forEach(o => game.screen.drawItem(o));
+        this.labels.forEach(o => game.screen.drawItem(o));
         this.screen.draw(ctx);
-        this.screen.drawMission(ctx); 
-       }
+        this.screen.drawMission(ctx);
+        this.screen.drawScore(ctx);
+
+    }
 
     thrusRocket() {
         if (this.rocket)
@@ -281,11 +330,12 @@ class Game {
             this.rocket.moveRocket(value);
     }
 
-
-
     newRocket(position) {
 
-        position = position || { x: cWidth / 2, y: groundPoint };
+        position = position || {
+            x: cWidth / 2,
+            y: groundPoint
+        };
 
         if (this.rockets.filter(rocket => rocket.life > 0) == 0) {
             let rocket = new Rocket(position.x, position.y);
@@ -302,7 +352,6 @@ class Game {
         this.fires = [];
         this.smoke = [];
 
-
         return this.rocket;
     }
 
@@ -312,26 +361,41 @@ class Game {
         let x = dir ? this.rocket.x - 1500 : this.rocket.x + 1500;
         let y = groundPoint - 180 - Math.random() * 400;
         let vmin = Math.max(30, 30 + 30 * Math.random());
-        let v = { x: (dir ? 1 : -1) * vmin, y: 0 }
+        let v = {
+            x: (dir ? 1 : -1) * vmin,
+            y: 0
+        }
 
-        let plane = new Plane({ x: x, y: y }, v);
+        let plane = new Plane({
+            x: x,
+            y: y
+        }, v);
         plane.addListener(this);
         this.planes.push(plane);
-
 
     }
 
     smoking(emitter, count = 8) {
 
-        if (randNum(1, 3) == 1) return;
+        if (randNum(1, 3) == 1)
+            return;
 
         let pos = emitter.smokingPosition();
 
         for (let i = 0; i < count; i++) {
-            pos = { x: pos.x + (Math.random() - 0.5) * 20, y: pos.y };
-            let vel = { x: 0, y: -10 };
+            pos = {
+                x: pos.x + (Math.random() - 0.5) * 20,
+                y: pos.y
+            };
+            let vel = {
+                x: 0,
+                y: -10
+            };
             if (emitter.thrust != null) {
-                vel = { x: emitter.thrust.x * 5 + (Math.random() - 0.5) * 5, y: 0 - emitter.thrust.y * 1 + (Math.random() - 0.5) * 5 };
+                vel = {
+                    x: emitter.thrust.x * 5 + (Math.random() - 0.5) * 5,
+                    y: 0 - emitter.thrust.y * 1 + (Math.random() - 0.5) * 5
+                };
             }
             this.smoke.push(new SmokeParticle(pos.x, pos.y, vel));
         }
@@ -341,6 +405,7 @@ class Game {
     exploding(vehicle) {
 
         // Here it goes the sound of a big explosion
+
 
         let explodePos = vehicle.explodePosition();
         let smokeSize = 3;
@@ -353,26 +418,31 @@ class Game {
 
         // A lot of dense smoke falling down
         for (let i = 0; i < 100; i++) {
-            explodePos = { x: explodePos.x, y: explodePos.y };
-            let vel = { x: (Math.random() - 0.5) * 25, y: (Math.random() - 0.5) * 25 };
+            explodePos = {
+                x: explodePos.x,
+                y: explodePos.y
+            };
+            let vel = {
+                x: (Math.random() - 0.5) * 25,
+                y: (Math.random() - 0.5) * 25
+            };
             this.smoke.push(new SmokeParticle(explodePos.x, explodePos.y, vel, smokeSize, smokeMass));
         }
 
     }
 
-
     distance(dot, otherDot) {
         var dx = otherDot.x - dot.x,
-            dy = otherDot.y - dot.y,
-            dist = Math.sqrt(dx * dx + dy * dy);
+        dy = otherDot.y - dot.y,
+        dist = Math.sqrt(dx * dx + dy * dy);
         return dist;
     }
 
     collide(dot, otherDot) {
         var dx = otherDot.x - dot.x,
-            dy = otherDot.y - dot.y,
-            dist = Math.sqrt(dx * dx + dy * dy),
-            minDist = dot.radius + otherDot.radius;
+        dy = otherDot.y - dot.y,
+        dist = Math.sqrt(dx * dx + dy * dy),
+        minDist = dot.radius + otherDot.radius;
         if (dist < minDist) {
             return true;
         }
@@ -396,14 +466,14 @@ class Game {
         // still working on understanding this
         // lots of help from https://lamberta.github.io/html5-animation/
         var dx = otherDot.x - dot.x,
-            dy = otherDot.y - dot.y,
-            dist = Math.sqrt(dx * dx + dy * dy),
-            minDist = dot.radius + otherDot.radius;
+        dy = otherDot.y - dot.y,
+        dist = Math.sqrt(dx * dx + dy * dy),
+        minDist = dot.radius + otherDot.radius;
         if (dist < minDist) {
             var tx = dot.x + dx / dist * minDist,
-                ty = dot.y + dy / dist * minDist,
-                ax = (tx - otherDot.x),
-                ay = (ty - otherDot.y);
+            ty = dot.y + dy / dist * minDist,
+            ax = (tx - otherDot.x),
+            ay = (ty - otherDot.y);
 
             ax *= force.x; //0.001;
             ay *= force.y; //0.0005;
@@ -417,20 +487,20 @@ class Game {
         return false;
     }
 
-
-
-
-
     showHelp() {
         this.screen.modal.visible = true;
         this.stop = true;
     }
 
+    showGameOver() {
+        this.screen.gameover.visible = true;
+        this.stop = true;
+    }
 
     checkMissionStatus() {
         if (this.mission) {
             let resourceName = this.mission.path[0]
-            let resource = this.resources.filter(resource => resource.name == resourceName)[0];
+                let resource = this.resources.filter(resource => resource.name == resourceName)[0];
             if (resource != null) {
                 resource.visible = true;
                 resource.animate = true;
@@ -451,6 +521,12 @@ class Game {
         if (!this.missionCompleted) {
 
             // Here it goes mission complete sound
+            this.score += this.mission.reward;
+            if (this.score > this.highScore)
+                this.highScore = this.score;
+
+
+            this.labels.push(new Label(game.rocket.x, game.rocket.y, "+" + this.mission.reward));
 
             setTimeout(() => {
                 game.nextMission();
@@ -467,7 +543,7 @@ class Game {
         this.missionCompleted = false;
         this.rocket.loaded = false;
         this.dificulty++;
-    }
 
+    }
 
 }

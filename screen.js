@@ -1,7 +1,6 @@
 
 class Screen {
 
-
     constructor(width, height, ctx) {
 
         ctx = ctx;
@@ -21,9 +20,9 @@ class Screen {
         this.y = (cHeight - this.height) / 2;
         this.y_original = this.y;
 
-
-        this.modal = new Modal(this);
         this.minimap = new MiniMap(this, 225, 150);
+        this.modal = new Modal(this);
+        this.gameover = new GameOver(this);
 
         this.stars = [];
         this.trees = [];
@@ -58,19 +57,21 @@ class Screen {
             }
         }
         // No trees arround respawn point
-        this.trees = this.trees.filter(tree => {return tree.x < cWidth/2 -400 || tree.x > cWidth/2 +400 });
+        this.trees = this.trees.filter(tree => {
+            return tree.x < cWidth / 2 - 400 || tree.x > cWidth / 2 + 400
+        });
     }
 
-
     update(dt) {
+        this.gameover.step(dt);
         this.modal.step(dt);
         this.minimap.step(dt);
 
     }
 
-
     draw(ctx) {
 
+        this.gameover.draw(ctx);
         this.modal.draw(ctx);
         this.minimap.draw(ctx);
 
@@ -88,24 +89,26 @@ class Screen {
         ctx.lineWidth = 12;
 
         let resource = game.resources
-            .filter(resource => { return resource.name == game.mission.path[0] })[0];
+            .filter(resource => {
+                return resource.name == game.mission.path[0]
+            })[0];
 
         if (resource) {
             game.bases
-                .filter(base => { return base.name == game.mission.path[1] })
-                .forEach(base => {
-                    ctx.beginPath();
-                    ctx.moveTo(resource.x, resource.y);
-                    ctx.lineTo(base.x, base.y);
-                    ctx.stroke();
-                });
+            .filter(base => {
+                return base.name == game.mission.path[1]
+            })
+            .forEach(base => {
+                ctx.beginPath();
+                ctx.moveTo(resource.x, resource.y);
+                ctx.lineTo(base.x, base.y);
+                ctx.stroke();
+            });
         }
 
         ctx.restore();
 
-
     }
-
 
     drawItem(item) {
         var rect = canvas.getBoundingClientRect();
@@ -116,7 +119,6 @@ class Screen {
         item.draw(ctx)
         ctx.restore();
     }
-
 
     drawScene() {
         ctx.save();
@@ -139,7 +141,6 @@ class Screen {
 
         ctx.beginPath();
 
-
         ctx.fillStyle = "rgb(255, 255, 255)";
         this.stars.forEach(function (star) {
             ctx.beginPath();
@@ -155,8 +156,6 @@ class Screen {
             ctx.fillText("🌳", tree.x, tree.y);
         });
 
-
-
         // ground
         ctx.beginPath();
         ctx.moveTo(-100 * cWidth, ground);
@@ -168,16 +167,61 @@ class Screen {
         ctx.restore();
 
         ctx.restore();
+    }
+
+    drawScore() {
+
+        let spacer = 0,
+        textSpacer = 30;
+
+        let rx = 50; //cWidth - 600;
+        let ry = 0;
+        let w = 150;
+        let h = 100;
+
+        ctx.beginPath();
+        ctx.fillStyle = "rgb(255,255,255,0.6)";
+        ctx.roundRect(rx - 30, ry + 20, w, h, 20);
+        ctx.fill();
+
+        ctx.font = "bold 20px Verdana";
+        ctx.textAlign = "left";
+        ctx.fillStyle = "#000000";
+
+        for (let index = 0; index <= game.lives-1; index++) {
+
+            if (game.rocket.hasExploded && index == game.lives-1) {
+                ctx.save();
+                ctx.translate(rx + 10 + 25 * index, ry + 15);
+                ctx.beginPath();
+                ctx.fillText("🔥", -21, 42);
+                ctx.stroke();
+                ctx.restore();
+            } else {
+                ctx.save();
+                ctx.translate(rx + 10 + 25 * index, ry + 15);
+                ctx.rotate(-Math.PI / 4);
+                ctx.beginPath();
+                ctx.fillText("🚀", -45, 25);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+        }
+
+        ctx.fillStyle = "black";
+        ctx.font = "26px Helvetica";
+
+        ctx.beginPath();
+        ctx.fillText("💳: " + game.score, rx - 10, ry + 95 + spacer++ * textSpacer);
+        ctx.stroke();
 
     }
 
-
     drawMission() {
-        
 
-        let spacer = 0, textSpacer = 30;
-
-
+        let spacer = 0,
+        textSpacer = 30;
 
         if (game.mission) {
 
@@ -186,17 +230,15 @@ class Screen {
 
             ctx.beginPath();
             ctx.fillStyle = "rgb(255,255,255,0.6)";
-//            ctx.fillRect(rx - 30, ry - 50, 450, 180, 20);
+            //            ctx.fillRect(rx - 30, ry - 50, 450, 180, 20);
             ctx.roundRect(rx - 30, ry - 50, 450, 180, 20);
             ctx.fill();
-            
-
 
             ctx.fillStyle = "black";
             ctx.font = "28px Helvetica";
 
             ctx.beginPath();
-            ctx.fillText( game.rocket.name + " Mission " + (game.missionIndex + 1) + ":", rx, ry + spacer++ * textSpacer);
+            ctx.fillText(game.rocket.name + " Mission " + (game.missionIndex + 1) + ":", rx, ry + spacer++ * textSpacer);
             ctx.stroke();
 
             spacer++
@@ -214,14 +256,6 @@ class Screen {
             }
         }
 
-
-        ctx.restore();
     }
 
-
 }
-
-
-
-
-
