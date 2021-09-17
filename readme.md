@@ -2,9 +2,12 @@
 <p align="center">
   <img src="./screenshot.png" width="800px">
   <br>
-<a href="https://js13kgames.com/entries/rocket-cargo" target="_blank"><b>Play the game</b></a>
+<a href="https://js13kgames.com/entries/rocket-cargo" target="_blank"><b>Play the submitted game</b></a>
  </p>
   <br>
+
+<a href="https://santiherranz.github.io/RocketCargo/" target="_blank"><b>Play the latest version</b></a>
+
 <p align="left">  
   <b>Rocket Cargo</b> is an order delivery game with a rocket.
 
