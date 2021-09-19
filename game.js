@@ -1,11 +1,36 @@
+
+
+"use strict"; // strict mode
+
+let time = 1;
+
+class Timer {
+    constructor() {
+        this.endTime = 0;
+    }
+    Set(timeLeft = 0) {
+        this.endTime = time + timeLeft;
+    }
+    Get() {
+        return this.IsSet() ? time - this.endTime : 1e9;
+    }
+    IsSet() {
+        return this.endTime > 0;
+    }
+    UnSet() {
+        this.endTime = 0;
+    }
+    Elapsed() {
+        return !this.IsSet() || time > this.endTime;
+    }
+}
+
+let coinSoundTimer = new Timer();
+
 class Game {
     constructor(x, y) {
 
-        this.stop = true;
         this.debug = false;
-
-        this.x = x;
-        this.y = y;
 
         this.rocketRespawn = true;
         this.respawnPos = {
@@ -20,6 +45,28 @@ class Game {
             y: 0
         };
 
+
+        // setTimeout(() => {
+        //     this.showHelp();
+        // }, 100);
+
+        this.init();
+
+
+    }
+
+    tweetScore() {
+        const TEXT_DIVIDER = " &nbsp;&#8901;&nbsp; ";
+        const TWEET_PREFIX = "https://twitter.com/intent/tweet?text=";
+        const TWEET_SUFFIX = "%0A%0APlay%20Rocket%20Cargo%20%23js13k%20game%20by%20%40santiHerranz%20here:%20js13kgames.com%2Fentries%2Frocket-cargo";
+
+        window.open(TWEET_PREFIX + "Mission%20" + (this.missionIndex + 1) + "%20scoring%20" + this.score + "%20points" + TWEET_SUFFIX);
+    }
+
+    init() {
+
+        this.gameover = false;
+
         this.planes = [];
         this.rockets = [];
         this.smoke = [];
@@ -32,39 +79,12 @@ class Game {
         this.dificulty = 1;
         this.lives = 3;
         this.highScore = 0;
-        this.score = 0;
-
+        this.score = 1000;
 
         this.rocket = null;
         this.lastRocketY = 0;
 
         this.planeRespawn = true;
-
-        setTimeout(() => {
-            this.showHelp();
-        },100);
-
-        this.init();
-    }
-
-    init() {
-
-        this.planes = [];
-        this.rockets = [];
-        this.smoke = [];
-        this.fires = [];
-        this.pieces = [];
-        this.bases = [];
-        this.resources = [];
-        this.labels = [];
-
-        this.rocket = null;
-        this.lastRocketY = 0;
-
-        this.dificulty = 1;
-        this.lives = 3;
-        this.highScore = 0;
-        this.score = 0;
 
         let rp = this.respawnPos.x;
 
@@ -81,7 +101,6 @@ class Game {
         this.bases.push(new Base("🛸", rp + 1500, groundPoint - 1100));
         this.bases.push(new Base("🛰️", rp + 3500, groundPoint - 1100));
 
-        this.missionIndex = 0;
         this.missions = [];
 
         // Mission random generator
@@ -100,7 +119,7 @@ class Game {
             }
         }
 
-
+        this.missionIndex = 0;
         this.mission = this.missions[this.missionIndex];
         this.missionCompleted = false;
 
@@ -110,7 +129,7 @@ class Game {
 
         this.newRocket(this.respawnPos);
 
-
+        this.noFuel = false;
 
         this.stop = false;
 
@@ -120,9 +139,18 @@ class Game {
         return b + ((i / 0.99999) * (e - b));
     }
 
+    UpdateAudio() {
+
+        if (coinSoundTimer.IsSet() && coinSoundTimer.Elapsed()) {
+            // coin sound plays twice quickly with higher pitch the second time
+            PlaySound(10, 800)
+            coinSoundTimer.UnSet();
+        }
+    }
+
     step(dt) {
 
-
+        //this.UpdateAudio();
 
         this.screen.update(dt);
 
@@ -146,6 +174,25 @@ class Game {
         });
 
         this.checkMissionStatus();
+
+
+        let rocket = this.rocket;
+
+        if (rocket.fuel > 0) {
+            rocket.velX += rocket.thrust.x;
+            rocket.velY -= rocket.thrust.y;
+
+            rocket.fuel -= rocket.thrust.y;
+            rocket.fuel = Math.max(0, rocket.fuel);
+        } else {
+            rocket.thrust.x = 0;
+            rocket.thrust.y = 0;
+            if (!this.noFuel) {
+                this.playSound("NO_FUEL");
+                this.noFuel = true;
+            }
+        }
+
 
         this.fires.forEach(o => o.step(dt));
         this.rockets.forEach(o => o.step(dt));
@@ -229,6 +276,7 @@ class Game {
                                 rocket.loaded = true;
                                 rocket.load = resource.name;
                                 resource.visible = false;
+                                this.doing(rocket, "PICKING");
                             }
                         }
                     } else {
@@ -255,6 +303,7 @@ class Game {
                 if (this.collide(plane, rocket)) {
                     rocket.destroyVehicle();
                     plane.destroyVehicle();
+                    this.doing(rocket, "EXPLODING");
                 }
             });
         });
@@ -275,17 +324,28 @@ class Game {
         // Rocket Respawn or game Over
         if (this.rocketRespawn && this.rockets.filter(rocket => rocket.life > 0) == 0) {
 
-            if (this.lives-1 > 0) {
+            if (this.lives - 1 > 0) {
                 setTimeout(() => {
                     this.newRocket(this.respawnPos);
                     this.rocketRespawn = true;
                     this.lives -= 1;
+                    this.doing(rocket, "NEW_LIVE");
+
                 }, 3500);
                 this.rocketRespawn = false;
             } else {
-                setTimeout(() => {
-                    this.showGameOver();
-                }, 2000);
+
+                if (!this.gameover) {
+                    setTimeout(() => {
+                        this.showGameOver();
+                    }, 1500);
+
+                    this.gameover = true;
+
+                    setTimeout(() => {
+                        this.doing(this.rocket, "GAME_OVER");
+                    }, 1000);
+                }
             }
 
         }
@@ -311,18 +371,36 @@ class Game {
     }
 
     thrusRocket() {
-        if (this.rocket)
-            this.rocket.thrusRocket();
+        let rocket = this.rocket;
+
+        if (rocket) {
+            if (rocket.velY > 100)
+                rocket.thrust.y += rocket.landingThrust;
+            else
+                rocket.thrust.y += rocket.manualThrust;
+
+        }
     }
 
     refuelRocket() {
-        if (this.rocket)
-            this.rocket.refuelRocket();
+        let rocket = this.rocket;
+        if (rocket) {
+            if (rocket.fuel < rocket.fuel_MAX && rocket.canFuel) {
+                if (this.score > 0) {
+                    rocket.fuel += rocket.fuel_MAX / 100;
+                    this.score -= 0.5 * rocket.fuel_MAX / 100;
+                    this.doing(rocket, 'FUELING');
+                    this.noFuel = false;
+                }
+            }
+        }
     }
 
     destroyRocket() {
-        if (this.rocket)
+        if (this.rocket){
+            this.playSound('EXPLODING');
             this.rocket.destroyVehicle();
+        }
     }
 
     moveRocket(value) {
@@ -352,6 +430,9 @@ class Game {
         this.fires = [];
         this.smoke = [];
 
+        this.noFuel = false;
+
+
         return this.rocket;
     }
 
@@ -372,6 +453,35 @@ class Game {
         }, v);
         plane.addListener(this);
         this.planes.push(plane);
+    }
+
+    doing(who, what) {
+
+        switch (what) {
+        case 'TRUSTING':
+
+            // if (coinSoundTimer.IsSet() && coinSoundTimer.Elapsed()) {
+            //     // coin sound plays twice quickly with higher pitch the second time
+            //     this.playSound('TRUSTING', 800);
+            //     coinSoundTimer.UnSet();
+            // }
+            this.playSound('TRUSTING', 800);
+
+            break;
+        case 'EXPLODING':
+            this.playSound('EXPLODING');
+            this.exploding(who);
+            break;
+        case 'SMOKING':
+            this.playSound('SMOKING');
+            this.smoking(who);
+            break;
+
+        default:
+            this.playSound(what);
+
+            break;
+        }
 
     }
 
@@ -405,7 +515,7 @@ class Game {
     exploding(vehicle) {
 
         // Here it goes the sound of a big explosion
-
+        this.playSound('DESTROYED');
 
         let explodePos = vehicle.explodePosition();
         let smokeSize = 3;
@@ -521,10 +631,15 @@ class Game {
         if (!this.missionCompleted) {
 
             // Here it goes mission complete sound
+            this.doing(this.rocket, "MISSION_COMPLETED");
+
+            setTimeout(() => {
+                this.doing(this.rocket, this.mission.path[1]);
+            }, 200);
+
             this.score += this.mission.reward;
             if (this.score > this.highScore)
                 this.highScore = this.score;
-
 
             this.labels.push(new Label(game.rocket.x, game.rocket.y, "+" + this.mission.reward));
 
@@ -543,6 +658,62 @@ class Game {
         this.missionCompleted = false;
         this.rocket.loaded = false;
         this.dificulty++;
+
+        this.doing(this.rocket, "NEXT_MISSION");
+
+    }
+
+    //
+    playSound(sound, p = 0) {
+
+        switch (sound) {
+        case "EXPLODING":
+            zzfx(1.24, .15, 132, .1, 0, .4, 4, 2.5, 0, 0, 0, 0, 0, 0, 0, 1, .24, .37, 0, 0);
+            break;
+        case "FUELING":
+            zzfx(...[, , 537, .02, .02, .22, 1, 1.59, -6.98, 4.97]);
+            break;
+        case "TRUSTING":
+            zzfx(...[, , 224, .02, .02, .08, 1, 1.7, -13.9, , , , , , 6.7]);
+            break;
+        case "PICKING":
+            zzfx(...[1.5, .5, 270, , .1, , 1, 1.5, , , , , , , , .1, .01]);
+            break;
+        case "NEXT_MISSION":
+            //awzzfx(...[, , 172, .8, , .8, 1, .76, 7.7, 3.73, -482, .08, .15, , .14]);
+            break;
+        case "MISSION_COMPLETED":
+            zzfx(...[, , 1675, , .06, .24, 1, 1.82, , , 837, .06]);
+            break;
+        case "GAME_OVER":
+            zzfx(...[,,925,.04,.3,.6,1,.3,,6.27,-184,.09,.17]); // Game Over
+
+            break;
+                    case "👾":
+            zzfx(...[, , 662, .82, .11, .33, 1, 0, , -0.2, , , , 1.2, , .26, .01]);
+            break;
+        case "👽":
+            zzfx(...[, , 1675, , .06, .24, 1, 1.82, , , 837, .06]);
+            break;
+        case "🛰️":
+            zzfx(...[, .5, 847, .02, .3, .9, 1, 1.67, , , -294, .04, .13, , , , .1]);
+            break;
+        case "🛸":
+            zzfx(...[, , 103, .1, .35, .91, 1, .82, 9.3, -2.4, 2, .06, .08, , , .1, , .54, .09]); // Powerup 16
+            break;
+        case "NEW_LIVE":
+            zzfx(...[, , 20, .04, , .6, , 1.31, , , -990, .06, .17, , , .04, .07]);
+            break;
+
+            case "NO_FUEL":
+                zzfx(.2, .1, 1319, .05, .34, .9, 1,                3.6, .47); // ZzFX 74550
+                break;
+    
+            
+
+        default:
+            break;
+        }
 
     }
 

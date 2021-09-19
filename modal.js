@@ -152,6 +152,17 @@ class GameOver {
             }
         };
 
+        var a = new Button(this.x + this.width / 2 - 150 / 2, this.y + this.height * 0.8 - 50, 150, 20, 'Tweet score', bStyle
+            , function () {
+                if (!game.screen.gameover.visible) return;
+                setTimeout(() => {
+                    game.tweetScore();
+                }, 200);
+
+            });
+        this.buttons.push(a);
+
+
         var a = new Button(this.x + this.width / 2 - 150 / 2, this.y + this.height * 0.8, 150, 20, 'New Game', bStyle
             , function () {
                 if (!game.screen.gameover.visible) return;
@@ -159,6 +170,9 @@ class GameOver {
                 game.init();
             });
         this.buttons.push(a);
+
+
+        
     }
 
     step(dt) {
@@ -224,17 +238,18 @@ class Button {
         this.state = 'default';  // current button state
 
         this.isClicking = false;
+        this.isKeying = false;
     }
 
     step(dt) {
         if (!this.enabled) return;
         ///
 
-        if (input.enter && typeof this.clickCB === 'function' && !this.isClicking) {
+        if (input.enter && typeof this.clickCB === 'function' && !this.isKeying) {
                 this.clickCB();
-                this.isClicking = true;
+                this.isKeying = true;
         } else {
-            this.isClicking = false;
+            this.isKeying = false;
         }
 
 

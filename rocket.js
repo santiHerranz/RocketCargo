@@ -22,7 +22,7 @@ class Rocket extends Vehicle {
 
 
         this.thrust = { x: 0, y: 0 };
-        this.thrusting = false;
+        this.isThrusting = false;
 
         this.fuelTank = { x: 60, y: -10, w: 7, h: 52, color: 'red' };
 
@@ -56,26 +56,19 @@ class Rocket extends Vehicle {
 
 
 
-        if (this.fuel > 0) {
-            this.velX += this.thrust.x;
-            this.velY -= this.thrust.y;
 
-            this.fuel -= this.thrust.y;
-            this.fuel = Math.max(0, this.fuel);
-        } else {
-            this.thrust.x = 0;
-            this.thrust.y = 0;
-        }
 
         this.thrustAngle = Math.atan2(this.thrust.x, this.thrust.y) + Math.PI / 2;
 
-        this.thrusting = false;
+        this.isThrusting = false;
         if (Math.abs(this.thrust.x) > 0 || Math.abs(this.thrust.y) > 0) {
             this.status = "flying";
             this.grounded = false;
             this.hasExploded = false;
-            this.thrusting = true;
-            this.smoking();
+            this.isThrusting = true;
+
+            this.doing('SMOKING');
+            this.doing('TRUSTING');
         }
 
         this.thrust.x = 0;
@@ -97,7 +90,7 @@ class Rocket extends Vehicle {
 
         if (this.status == "flying" && this.y > groundPoint - 50) {
             if (this.velY > this.landingConstraints.dy || this.velX > this.landingConstraints.dx) {
-                this.exploding();
+                this.doing('EXPLODING');
                 this.life = 0;
                 this.hasExploded = true;
             } else {
@@ -128,7 +121,7 @@ class Rocket extends Vehicle {
     draw(ctx) {
         super.draw(ctx);
 
-        if (this.thrusting)
+        if (this.isThrusting)
             this.drawExhaustPlume(this);
 
 
@@ -153,7 +146,7 @@ class Rocket extends Vehicle {
 
     drawRocket() {
 
-        this.throttle = this.thrusting ? 1 : 0;
+        this.throttle = this.isThrusting ? 1 : 0;
         this.gimbalAngle = -this.thrustAngle;
 
         var L = this.Length;
@@ -248,19 +241,12 @@ class Rocket extends Vehicle {
         }
     }
 
-    thrusRocket() {
-        if (this.velY > 100)
-            this.thrust.y += this.landingThrust;
-        else
-            this.thrust.y += this.manualThrust;
-    }
-    refuelRocket() {
-        if (this.fuel < this.fuel_MAX && this.canFuel) {
-            if (game.score > 0) {
-                this.fuel += this.fuel_MAX / 100;
-                game.score -= this.fuel_MAX / 100;
-            }
-        }
+
+
+    doing(what) {
+        this.listeners.forEach(listener => {
+            listener.doing(this, what);
+        });
     }
 
 

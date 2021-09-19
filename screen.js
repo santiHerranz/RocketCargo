@@ -51,7 +51,8 @@ class Screen {
             for (let y = yp; y < height; y += spacing) {
                 const tree = {
                     x: x + Math.floor(Math.random() * spacing),
-                    y: y + Math.floor(Math.random() * 0)
+                    y: y + Math.floor(Math.random() * 0),
+                    size: (60 + (30*Math.random()-0.5)).toFixed(0)
                 };
                 this.trees.push(tree);
             }
@@ -148,10 +149,10 @@ class Screen {
             ctx.fill();
         });
 
-        ctx.font = "50px Verdana";
         ctx.textAlign = "center";
         ctx.fillStyle = "#000000";
         this.trees.forEach(function (tree) {
+            ctx.font = tree.size +"px Verdana";
             ctx.beginPath();
             ctx.fillText("🌳", tree.x, tree.y);
         });
