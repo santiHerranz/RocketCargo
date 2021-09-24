@@ -46,9 +46,9 @@ class Game {
         };
 
 
-        // setTimeout(() => {
-        //     this.showHelp();
-        // }, 100);
+        setTimeout(() => {
+             this.showHelp();
+        }, 100);
 
         this.init();
 
@@ -79,7 +79,7 @@ class Game {
         this.dificulty = 1;
         this.lives = 3;
         this.highScore = 0;
-        this.score = 1000;
+        this.score = 0;
 
         this.rocket = null;
         this.lastRocketY = 0;
