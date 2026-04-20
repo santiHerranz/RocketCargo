@@ -1,11 +1,10 @@
 /**
  * smoke Particle Mass
  */
+// Shared palette: no reason to allocate it on every single particle.
+var SMOKE_COLORS = ['rgba(255,255,255,0.2)', 'rgba(200,200,200,0.2)', 'rgba(230,230,230,0.2)'];
+
 var SmokeParticle = function (x, y, v, r = 1, mass = 0.001) {
-
-    this.name = Math.random().toString(36).substr(2, 9);
-
-    var smokeColors = ['rgba(255,255,255,0.2)', 'rgba(200,200,200,0.2)', 'rgba(230,230,230,0.2)'];
 
     v = v || { x: 0, y: 0 }
 
@@ -18,8 +17,7 @@ var SmokeParticle = function (x, y, v, r = 1, mass = 0.001) {
     this.mass = mass;
 
     this.life = 100;
-    this.strokeColor = smokeColors[randNum(0, smokeColors.length - 1)];
-    this.fillColor = smokeColors[randNum(0, smokeColors.length - 1)];
+    this.fillColor = SMOKE_COLORS[(Math.random() * SMOKE_COLORS.length) | 0];
 }
 
 SmokeParticle.prototype.step = function (dt) {
@@ -46,16 +44,13 @@ SmokeParticle.prototype.step = function (dt) {
 }
 
 SmokeParticle.prototype.draw = function (ctx) {
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.lineWidth = 0;
-    ctx.strokeStyle = this.strokeColor;
+    // No save/restore: smoke particles only set fillStyle, which is harmless to
+    // leak to the next entity in the batched world pass. We also drop stroke():
+    // a transparent stroke with lineWidth 0 is a pure cost, no visible effect.
     ctx.fillStyle = this.fillColor;
+    ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
     ctx.fill();
-    ctx.stroke();
-    ctx.restore();
 }
 
 

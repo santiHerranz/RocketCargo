@@ -95,15 +95,44 @@ var update = function (dt) {
 
 }
 
-var main = function () {
-	update(dt);
-	game.draw(ctx);
-	requestAnimationFrame(main);
-}
-
-
+// Fixed-timestep loop: decouples logic (60 Hz) from render rate so that gameplay
+// behaves identically on 30, 60, 120 and 144 Hz displays. The accumulator pattern
+// is the canonical fix for variable-refresh browsers.
 var w = window;
-requestAnimationFrame = w.requestAnimationFrame || w.webkitRequestAnimationFrame || w.msRequestAnimationFrame || w.mozRequestAnimationFrame;
+var raf = w.requestAnimationFrame || w.webkitRequestAnimationFrame || w.msRequestAnimationFrame || w.mozRequestAnimationFrame;
+
+var LOGIC_HZ = 60;
+var STEP_MS = 1000 / LOGIC_HZ;         // 16.666... ms per logic tick
+// Keep the historical gameplay feel: the old loop ran "dt = 0.2" once per rAF on
+// a 60 Hz monitor, so 1 fixed step == 0.2 game units.
+var STEP_DT = dt;
+var MAX_FRAME_MS = 250;                // cap: avoids spiral-of-death after tab-throttle
+var MAX_STEPS_PER_FRAME = 5;           // cap: never run more than 5 logic ticks per render
+
+var lastFrameMs = 0;
+var accumulatorMs = 0;
+
+var main = function (nowMs) {
+	if (!lastFrameMs) lastFrameMs = nowMs;
+	var frameMs = nowMs - lastFrameMs;
+	lastFrameMs = nowMs;
+	if (frameMs > MAX_FRAME_MS) frameMs = MAX_FRAME_MS;
+
+	accumulatorMs += frameMs;
+
+	var steps = 0;
+	while (accumulatorMs >= STEP_MS && steps < MAX_STEPS_PER_FRAME) {
+		update(STEP_DT);
+		accumulatorMs -= STEP_MS;
+		steps++;
+	}
+	// If we are still behind (very slow browser) discard the leftover so the game
+	// slows down visibly instead of freezing while trying to catch up.
+	if (accumulatorMs > STEP_MS) accumulatorMs = 0;
+
+	game.draw(ctx);
+	raf(main);
+}
 
 
 
@@ -177,7 +206,7 @@ addEventListener('keyup', onkeyup);
   }
 
 
-  main();
+  raf(main);
 
 
 

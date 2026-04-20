@@ -2,6 +2,21 @@
 
 "use strict"; // strict mode
 
+// Remove-dead-in-place. Returns the new length (== number of alive objects).
+// Replaces `arr = arr.filter(o => o.life > 0)` which allocated a new array per
+// call and was invoked on 6 arrays every single frame.
+function compactAlive(arr) {
+    let w = 0;
+    for (let i = 0; i < arr.length; i++) {
+        if (arr[i].life > 0) {
+            if (w !== i) arr[w] = arr[i];
+            w++;
+        }
+    }
+    arr.length = w;
+    return w;
+}
+
 let time = 1;
 
 class Timer {
@@ -126,6 +141,7 @@ class Game {
         // Fuel pumps
         this.bases.push(new Base("⛽", rp - 300, groundPoint, 100));
         this.bases.push(new Base("⛽", rp + 2900, groundPoint, 100));
+        this._fuelPumpsDirty = true;
 
         this.newRocket(this.respawnPos);
 
@@ -157,21 +173,16 @@ class Game {
         if (this.stop)
             return;
 
-        // remove death stuff
-        this.smoke = this.smoke.filter(o => o.life > 0);
-        this.rockets = this.rockets.filter(o => o.life > 0);
-        this.planes = this.planes.filter(o => o.life > 0);
-        this.pieces = this.pieces.filter(o => o.life > 0);
-        this.fires = this.fires.filter(o => o.life > 0);
-        this.labels = this.labels.filter(o => o.life > 0);
+        // In-place removal of dead objects. Avoids allocating 6 new arrays per
+        // frame (big GC pressure win with lots of smoke/pieces on screen).
+        compactAlive(this.smoke);
+        compactAlive(this.rockets);
+        let alivePlanes = compactAlive(this.planes);
+        compactAlive(this.pieces);
+        compactAlive(this.fires);
+        compactAlive(this.labels);
 
-        this.resources
-        // .filter(res => {
-        //     return res.building == "⛽"
-        // })
-        .forEach(resource => {
-            resource.visible = false;
-        });
+        for (let i = 0; i < this.resources.length; i++) this.resources[i].visible = false;
 
         this.checkMissionStatus();
 
@@ -194,21 +205,12 @@ class Game {
         }
 
 
-        this.fires.forEach(o => o.step(dt));
-        this.rockets.forEach(o => o.step(dt));
-        this.planes.forEach(o => o.step(dt));
-        this.smoke.forEach(o => o.step(dt));
-        this.pieces.forEach(o => o.step(dt));
-        this.labels.forEach(o => o.step(dt));
-
-        // Smoke self Interaction - (poor performace)
-        // let force = { x: 0.001, y: 0.0005 };
-        // this.smoke.forEach(dot => {
-        //     this.smoke.forEach(otherDot => {
-        //         if (dot.name != otherDot.name)
-        //             this.collideWithForce(dot, otherDot, force);
-        //     });
-        // });
+        for (let i = 0; i < this.fires.length; i++) this.fires[i].step(dt);
+        for (let i = 0; i < this.rockets.length; i++) this.rockets[i].step(dt);
+        for (let i = 0; i < this.planes.length; i++) this.planes[i].step(dt);
+        for (let i = 0; i < this.smoke.length; i++) this.smoke[i].step(dt);
+        for (let i = 0; i < this.pieces.length; i++) this.pieces[i].step(dt);
+        for (let i = 0; i < this.labels.length; i++) this.labels[i].step(dt);
 
 
         // Vertical Zoom with logic, no frustrum view
@@ -222,107 +224,118 @@ class Game {
 
         this.screen.offsetX = -this.rocket.x + this.respawnPos.x;
 
-        this.bases.forEach(base => {
-            base.color = base.colorNormal;
-        });
+        for (let i = 0; i < this.bases.length; i++) this.bases[i].color = this.bases[i].colorNormal;
 
-        // Rocket can fuel only at fuel pump base
-        let fuelPump = [];
-        this.bases
-        .filter(base => base.name == "⛽")
-        .forEach(base => fuelPump.push(base));
+        // Fuel pumps rarely change, so cache the subset.
+        if (!this._fuelPumps || this._fuelPumpsDirty) {
+            this._fuelPumps = [];
+            for (let i = 0; i < this.bases.length; i++) {
+                if (this.bases[i].name === "⛽") this._fuelPumps.push(this.bases[i]);
+            }
+            this._fuelPumpsDirty = false;
+        }
+        let fuelPump = this._fuelPumps;
 
         if (fuelPump.length > 0) {
-            this.rockets.forEach(rocket => {
-                rocket.canFuel = false;
+            for (let r = 0; r < this.rockets.length; r++) {
+                let rk = this.rockets[r];
+                rk.canFuel = false;
 
+                // Squared distance: avoids 2 sqrt per candidate per rocket.
                 let nearest = fuelPump[0];
-                for (let index = 1; index < fuelPump.length; index++) {
-                    if (fuelPump[index].distance(rocket) < nearest.distance(rocket))
-                        nearest = fuelPump[index];
+                let dxN = nearest.x - rk.x, dyN = nearest.y - rk.y;
+                let nearestD2 = dxN * dxN + dyN * dyN;
+                for (let i = 1; i < fuelPump.length; i++) {
+                    let fp = fuelPump[i];
+                    let dx = fp.x - rk.x, dy = fp.y - rk.y;
+                    let d2 = dx * dx + dy * dy;
+                    if (d2 < nearestD2) { nearest = fp; nearestD2 = d2; }
                 }
 
-                if (nearest != null) {
-                    if (this.distance(nearest, rocket) < nearest.radius * 4) {
-                        nearest.color = nearest.colorActive;
-                        rocket.canFuel = true;
-                    } else {
-                        nearest.color = nearest.colorNormal;
-                    }
+                let reach = nearest.radius * 4;
+                if (nearestD2 < reach * reach) {
+                    nearest.color = nearest.colorActive;
+                    rk.canFuel = true;
+                } else {
+                    nearest.color = nearest.colorNormal;
                 }
-            });
+            }
         }
 
         // Rocket can take away the resource if
         // - Is at place
         // - The resource at place is the goal of the mission
         if (this.resources.length > 0) {
-            this.rockets.forEach(rocket => {
+            for (let r = 0; r < this.rockets.length; r++) {
+                let rk = this.rockets[r];
 
                 let resource = this.resources[0];
-                for (let index = 1; index < this.resources.length; index++) {
-                    if (this.resources[index].distance(rocket) < resource.distance(rocket))
-                        resource = this.resources[index];
+                let dxN = resource.x - rk.x, dyN = resource.y - rk.y;
+                let nearestD2 = dxN * dxN + dyN * dyN;
+                for (let i = 1; i < this.resources.length; i++) {
+                    let res = this.resources[i];
+                    let dx = res.x - rk.x, dy = res.y - rk.y;
+                    let d2 = dx * dx + dy * dy;
+                    if (d2 < nearestD2) { resource = res; nearestD2 = d2; }
                 }
 
-                if (resource != null) {
+                let reach = resource.radius * 3;
+                if (nearestD2 < reach * reach) {
+                    resource.color = resource.colorActive;
 
-                    if (this.distance(resource, rocket) < resource.radius * 3) {
-                        resource.color = resource.colorActive;
-
-                        if (!rocket.loaded || rocket.load != resource.name) {
-
-                            if (resource.name == this.mission.path[0]) {
-                                rocket.loaded = true;
-                                rocket.load = resource.name;
-                                resource.visible = false;
-                                this.doing(rocket, "PICKING");
-                            }
+                    if (!rk.loaded || rk.load != resource.name) {
+                        if (this.mission && resource.name == this.mission.path[0]) {
+                            rk.loaded = true;
+                            rk.load = resource.name;
+                            resource.visible = false;
+                            this.doing(rk, "PICKING");
                         }
-                    } else {
-                        resource.color = resource.colorNormal;
                     }
-
+                } else {
+                    resource.color = resource.colorNormal;
                 }
-
-            });
+            }
         }
 
         // Base arrive
-        this.rockets.forEach(rocket => {
-            this.bases.forEach(base => {
-                if (rocket.velY > 0 && this.collideRect(rocket, base)) {
-                    rocket.status = "based";
+        for (let r = 0; r < this.rockets.length; r++) {
+            let rk = this.rockets[r];
+            if (rk.velY <= 0) continue;
+            for (let b = 0; b < this.bases.length; b++) {
+                if (this.collideRect(rk, this.bases[b])) {
+                    rk.status = "based";
+                    break;
                 }
-            });
-        });
+            }
+        }
 
-        this.planes.forEach(plane => {
-            this.rockets
-            .forEach(rocket => {
-                if (this.collide(plane, rocket)) {
-                    rocket.destroyVehicle();
+        for (let p = 0; p < this.planes.length; p++) {
+            let plane = this.planes[p];
+            for (let r = 0; r < this.rockets.length; r++) {
+                let rk = this.rockets[r];
+                if (this.collide(plane, rk)) {
+                    rk.destroyVehicle();
                     plane.destroyVehicle();
-                    this.doing(rocket, "EXPLODING");
+                    this.doing(rk, "EXPLODING");
                 }
-            });
-        });
+            }
+        }
 
         // remove out of view planes
-        this.planes.forEach(plane => {
-            if (plane.x > this.rocket.x + 1500)
-                plane.life = 0;
-            if (plane.x < this.rocket.x - 1500)
-                plane.life = 0;
-        });
+        let rx = this.rocket.x;
+        for (let p = 0; p < this.planes.length; p++) {
+            let plane = this.planes[p];
+            if (plane.x > rx + 1500 || plane.x < rx - 1500) plane.life = 0;
+        }
 
-        // Keep number of flying planes based on dificulty level
-        if (this.planes.filter(o => o.life > 0).length < this.dificulty) {
+        // Keep number of flying planes based on dificulty level. We already know
+        // how many were alive this tick from compactAlive's return value.
+        if (alivePlanes < this.dificulty) {
             this.newPlane();
         }
 
         // Rocket Respawn or game Over
-        if (this.rocketRespawn && this.rockets.filter(rocket => rocket.life > 0) == 0) {
+        if (this.rocketRespawn && this.rockets.length === 0) {
 
             if (this.lives - 1 > 0) {
                 setTimeout(() => {
@@ -354,16 +367,28 @@ class Game {
 
     draw(ctx) {
         ctx.clearRect(0, 0, cWidth, cHeight);
+
+        // World-space pass: one transform shared by scene + all entities.
+        this.screen.beginFrame();
+        this.screen.beginWorld(ctx);
         this.screen.drawScene();
         this.screen.drawTarget(ctx);
-        this.bases.forEach(o => game.screen.drawItem(o));
-        this.resources.forEach(o => game.screen.drawItem(o));
-        this.fires.forEach(o => game.screen.drawItem(o));
-        this.pieces.forEach(o => game.screen.drawItem(o));
-        this.rockets.forEach(o => game.screen.drawItem(o));
-        this.planes.forEach(o => game.screen.drawItem(o));
-        this.smoke.forEach(o => game.screen.drawItem(o));
-        this.labels.forEach(o => game.screen.drawItem(o));
+
+        // One save/restore per list (not per item): keeps canvas state isolated
+        // between different kinds of entities without paying the matrix cost of
+        // a save+scale+translate+restore per entity like the old code did.
+        let lists = [this.bases, this.resources, this.fires, this.pieces, this.rockets, this.planes, this.smoke, this.labels];
+        for (let l = 0; l < lists.length; l++) {
+            let arr = lists[l];
+            if (arr.length === 0) continue;
+            ctx.save();
+            for (let i = 0; i < arr.length; i++) arr[i].draw(ctx);
+            ctx.restore();
+        }
+
+        this.screen.endWorld(ctx);
+
+        // Screen-space HUD pass.
         this.screen.draw(ctx);
         this.screen.drawMission(ctx);
         this.screen.drawScore(ctx);
@@ -415,7 +440,9 @@ class Game {
             y: groundPoint
         };
 
-        if (this.rockets.filter(rocket => rocket.life > 0) == 0) {
+        let aliveCount = 0;
+        for (let i = 0; i < this.rockets.length; i++) if (this.rockets[i].life > 0) aliveCount++;
+        if (aliveCount === 0) {
             let rocket = new Rocket(position.x, position.y);
             rocket.addListener(this);
             this.rockets.unshift(rocket);
@@ -608,23 +635,29 @@ class Game {
     }
 
     checkMissionStatus() {
-        if (this.mission) {
-            let resourceName = this.mission.path[0]
-                let resource = this.resources.filter(resource => resource.name == resourceName)[0];
-            if (resource != null) {
-                resource.visible = true;
-                resource.animate = true;
+        if (!this.mission) return;
+
+        let resourceName = this.mission.path[0];
+        for (let i = 0; i < this.resources.length; i++) {
+            let r = this.resources[i];
+            if (r.name === resourceName) {
+                r.visible = true;
+                r.animate = true;
+                break;
             }
-            let baseName = this.mission.path[1];
-            let base = this.bases.filter(base => base.name == baseName)[0];
-            if (base != null) {
-                base.visible = true;
-                base.animate = true;
-                this.mission.distanceToTarget = -50 + base.distance(this.rocket);
-                if (this.mission.distanceToTarget < base.radius && this.rocket.status == "based" && this.rocket.loaded && this.rocket.life > 0) {
-                    this.missionHasCompleted();
-                }
+        }
+
+        let baseName = this.mission.path[1];
+        for (let i = 0; i < this.bases.length; i++) {
+            let b = this.bases[i];
+            if (b.name !== baseName) continue;
+            b.visible = true;
+            b.animate = true;
+            this.mission.distanceToTarget = -50 + b.distance(this.rocket);
+            if (this.mission.distanceToTarget < b.radius && this.rocket.status == "based" && this.rocket.loaded && this.rocket.life > 0) {
+                this.missionHasCompleted();
             }
+            break;
         }
     }
     missionHasCompleted() {

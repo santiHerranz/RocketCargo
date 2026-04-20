@@ -64,45 +64,47 @@ Fire.prototype.draw = function (ctx) {
 
   ctx.save();
 
+  // We only flip globalCompositeOperation twice instead of once per particle.
+  // Previous half: "xor", second half: "lighter" (keeps the original look).
+  let particles = this.particles;
+  let n = particles.length;
+  let half = n >> 1;
+  let invMax = 1 / this.max;
+  let halfSize = this.size / 2;
 
-  //Makes the colors add onto each other, producing
-  //that nice white in the middle of the fire
-  for (i = 0; i < this.particles.length; i++) {
+  if (n > 0) ctx.globalCompositeOperation = "xor";
 
+  for (let i = 0; i < n; i++) {
+    if (i === half) ctx.globalCompositeOperation = "lighter";
 
-
-    if (i < this.particles.length / 2) {
-      ctx.globalCompositeOperation = "xor";
-    }
-    else
-      ctx.globalCompositeOperation = "lighter";
-
-
-    //Set the file colour to an RGBA value where it starts off red-orange, but progressively gets more grey and transparent the longer the particle has been alive for
-    let r = (260 - (this.particles[i].life * 2));
-    let g = ((this.particles[i].life * 2) + 50);
-    let b = (this.particles[i].life * 2);
-    ctx.fillStyle = "rgba(" + r + "," + g + "," + b + "," + (((this.max - this.particles[i].life) / this.max) * 0.4) + ")";
+    let p = particles[i];
+    // Starts red-orange and fades toward grey / transparent as life grows.
+    let life2 = p.life * 2;
+    let aged = (this.max - p.life) * invMax;
+    ctx.fillStyle = "rgba(" + (260 - life2) + "," + (life2 + 50) + "," + life2 + "," + (aged * 0.4) + ")";
 
     ctx.beginPath();
-    //Draw the particle as a circle, which gets slightly smaller the longer it's been alive for
-    ctx.arc(this.particles[i].x, this.particles[i].y, (this.max - this.particles[i].life) / this.max * (this.size / 2) + (this.size / 2), 0, 2 * Math.PI);
+    ctx.arc(p.x, p.y, aged * halfSize + halfSize, 0, 2 * Math.PI);
     ctx.fill();
 
-    //Move the particle based on its horizontal and vertical speeds
-    this.particles[i].x += this.particles[i].xs;
-    this.particles[i].y += this.particles[i].ys;
+    p.x += p.xs;
+    p.y += p.ys;
+    p.life++;
+  }
 
-    this.particles[i].life++;
-    //If the particle has lived longer than we are allowing, remove it from the array.
-    if (this.particles[i].life >= this.max) {
-      this.particles.splice(i, 1);
-      i--;
+  // Remove expired particles in one pass at the end instead of splicing inside
+  // the render loop (each splice is O(n), and it was also corrupting the
+  // xor/lighter boundary when particles were removed mid-iteration).
+  let w = 0;
+  for (let i = 0; i < n; i++) {
+    if (particles[i].life < this.max) {
+      if (w !== i) particles[w] = particles[i];
+      w++;
     }
   }
+  particles.length = w;
+
   ctx.restore();
-
-
 
 }
 

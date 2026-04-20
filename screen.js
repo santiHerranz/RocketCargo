@@ -29,6 +29,12 @@ class Screen {
 
         this.createStars(-5 * cWidth, -1500, 10 * cWidth, groundPoint - 1000, 100);
         this.createTrees(-5 * cWidth, groundPoint - 10, 10 * cWidth, groundPoint - 0, 100);
+
+        // Cached per-frame state. getBoundingClientRect forces a layout reflow, so
+        // we call it once at the start of each render instead of per drawn item.
+        this._rectLeft = 0;
+        this._rectTop = 0;
+        this._worldActive = false;
     }
 
     createStars(xp, yp, width, height, spacing) {
@@ -78,84 +84,117 @@ class Screen {
 
     }
 
-    drawTarget(ctx) {
+    // Cache the canvas position once per frame. getBoundingClientRect triggers
+    // a forced layout synchronously, so calling it per item is the single most
+    // expensive thing the old renderer did.
+    beginFrame() {
         var rect = canvas.getBoundingClientRect();
+        this._rectLeft = rect.left;
+        this._rectTop = rect.top;
+    }
 
+    // Apply the world-space transform once, then draw every world object inside
+    // the block, then call endWorld. Avoids save/scale/translate/restore per item.
+    beginWorld(ctx) {
         ctx.save();
         ctx.scale(this.scaleX, this.scaleY);
-        ctx.translate(this.x + this.offsetX - rect.left, this.y + this.offsetY - rect.top);
+        ctx.translate(this.x + this.offsetX - this._rectLeft, this.y + this.offsetY - this._rectTop);
+        this._worldActive = true;
+    }
 
+    endWorld(ctx) {
+        ctx.restore();
+        this._worldActive = false;
+    }
+
+    drawTarget(ctx) {
+        // Assumes beginWorld() is active.
         ctx.strokeStyle = "rgb(255,255,255,0.3)";
         ctx.setLineDash([20, 20]);
         ctx.lineWidth = 12;
 
-        let resource = game.resources
-            .filter(resource => {
-                return resource.name == game.mission.path[0]
-            })[0];
+        let missionResourceName = game.mission && game.mission.path[0];
+        let missionBaseName = game.mission && game.mission.path[1];
+        if (!missionResourceName) { ctx.setLineDash([]); return; }
+
+        let resource = null;
+        for (let i = 0; i < game.resources.length; i++) {
+            if (game.resources[i].name === missionResourceName) { resource = game.resources[i]; break; }
+        }
 
         if (resource) {
-            game.bases
-            .filter(base => {
-                return base.name == game.mission.path[1]
-            })
-            .forEach(base => {
+            for (let i = 0; i < game.bases.length; i++) {
+                let base = game.bases[i];
+                if (base.name !== missionBaseName) continue;
                 ctx.beginPath();
                 ctx.moveTo(resource.x, resource.y);
                 ctx.lineTo(base.x, base.y);
                 ctx.stroke();
-            });
+            }
         }
 
-        ctx.restore();
-
+        ctx.setLineDash([]);
     }
 
+    // Kept for backward compatibility in case any code still calls it directly,
+    // but the main render path now batches all items under a single beginWorld.
     drawItem(item) {
-        var rect = canvas.getBoundingClientRect();
-
-        ctx.save();
-        ctx.scale(this.scaleX, this.scaleY);
-        ctx.translate(this.x + this.offsetX - rect.left, this.y + this.offsetY - rect.top);
-        item.draw(ctx)
-        ctx.restore();
+        if (this._worldActive) {
+            item.draw(ctx);
+            return;
+        }
+        this.beginFrame();
+        this.beginWorld(ctx);
+        item.draw(ctx);
+        this.endWorld(ctx);
     }
 
     drawScene() {
-        ctx.save();
-
-        var rect = canvas.getBoundingClientRect();
-
-        ctx.scale(this.scaleX, this.scaleY);
-        ctx.translate(this.x + this.offsetX - rect.left, this.y - rect.top + this.offsetY);
-
+        // Assumes beginWorld() is active.
         var ground = groundPoint;
 
         // sky
-        ctx.beginPath();
         ctx.fillStyle = "rgba(135,206,235,0.5)";
         ctx.fillRect(-100 * cWidth, -10000, 200 * cWidth, 10000 + ground);
 
-        ctx.beginPath();
         ctx.fillStyle = "rgba(0,0,0,1)";
         ctx.fillRect(-100 * cWidth, -1000 - 500, 200 * cWidth, 1000 + ground - 500);
 
-        ctx.beginPath();
+        // Compute visible world bounds to cull background decorations.
+        var invSX = 1 / this.scaleX;
+        var invSY = 1 / this.scaleY;
+        var worldLeft = -(this.x + this.offsetX - this._rectLeft);
+        var worldTop  = -(this.y + this.offsetY - this._rectTop);
+        var viewLeft   = worldLeft * invSX - 200;
+        var viewRight  = (worldLeft + cWidth) * invSX + 200;
+        var viewTop    = worldTop * invSY - 200;
+        var viewBottom = (worldTop + cHeight) * invSY + 200;
 
+        // Stars: share a single path so the GPU batches fills.
         ctx.fillStyle = "rgb(255, 255, 255)";
-        this.stars.forEach(function (star) {
+        for (let i = 0; i < this.stars.length; i++) {
+            let s = this.stars[i];
+            if (s.x < viewLeft || s.x > viewRight || s.y < viewTop || s.y > viewBottom) continue;
             ctx.beginPath();
-            ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
             ctx.fill();
-        });
+        }
 
+        // Trees: group by font size so we only change ctx.font a handful of times
+        // per frame instead of once per tree.
         ctx.textAlign = "center";
         ctx.fillStyle = "#000000";
-        this.trees.forEach(function (tree) {
-            ctx.font = tree.size +"px Verdana";
-            ctx.beginPath();
-            ctx.fillText("🌳", tree.x, tree.y);
-        });
+        let currentFont = "";
+        for (let i = 0; i < this.trees.length; i++) {
+            let t = this.trees[i];
+            if (t.x < viewLeft || t.x > viewRight) continue;
+            let f = t.size + "px Verdana";
+            if (f !== currentFont) {
+                ctx.font = f;
+                currentFont = f;
+            }
+            ctx.fillText("🌳", t.x, t.y);
+        }
 
         // ground
         ctx.beginPath();
@@ -165,9 +204,6 @@ class Screen {
         ctx.stroke();
         ctx.fillStyle = "rgba(0,200,100,0.6)";
         ctx.fillRect(-100 * cWidth, ground, 200 * cWidth, this.height);
-        ctx.restore();
-
-        ctx.restore();
     }
 
     drawScore() {
