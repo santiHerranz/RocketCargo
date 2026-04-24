@@ -10,6 +10,11 @@ class MiniMap {
         this.y = screen.height - this.height * 1 / 10 - h;
 
         this.color = "#282828";
+        this.ratioX = 0.03;
+        this.ratioY = 0.08;
+        this.originX = 50;
+        this.iconX = 35;
+        this.twoPi = Math.PI * 2;
     }
 
     step(dt) {
@@ -17,6 +22,15 @@ class MiniMap {
     }
 
     draw(ctx) {
+
+        let ratioX = this.ratioX;
+        let ratioY = this.ratioY;
+        let originX = this.originX;
+        let iconX = this.iconX;
+        let bases = game.bases;
+        let resources = game.resources;
+        let rockets = game.rockets;
+        let mission = game.mission;
 
         ctx.save();
 
@@ -31,9 +45,6 @@ class MiniMap {
         ctx.fill();
         ctx.stroke();
 
-        let ratioX = 0.03;
-        let ratioY = 0.08;
-
         ctx.translate(20, 75);
 
         ctx.beginPath();
@@ -45,51 +56,56 @@ class MiniMap {
         ctx.setLineDash([2, 2]);
         ctx.lineWidth = 3;
 
-        let resource = game.resources
-            .filter(resource => { return resource.name == game.mission.path[0] })[0];
+        let resource = null;
+        let resourceName = mission.path[0];
+        for (let i = 0; i < resources.length; i++) {
+            if (resources[i].name === resourceName) {
+                resource = resources[i];
+                break;
+            }
+        }
 
         if (resource) {
-            // Target 
-            game.bases
-                .filter(base => { return base.name == game.mission.path[1] })
-                .forEach(base => {
-
+            let targetName = mission.path[1];
+            let resourceX = originX + resource.x * ratioX;
+            let resourceY = resource.y * ratioY;
+            for (let i = 0; i < bases.length; i++) {
+                let base = bases[i];
+                if (base.name === targetName) {
                     ctx.beginPath();
-                    ctx.moveTo(50 + resource.x * ratioX, resource.y * ratioY);
-                    ctx.lineTo(50 + base.x * ratioX, base.y * ratioY);
+                    ctx.moveTo(resourceX, resourceY);
+                    ctx.lineTo(originX + base.x * ratioX, base.y * ratioY);
                     ctx.stroke();
-                });
+                }
+            }
         }
 
         // Customers position
-        game.bases
-            .forEach(base => {
-                if (base.visible) {
-                    ctx.font = "bold 25px Verdana";
-                    ctx.beginPath();
-                    ctx.fillText(base.name, 35 + base.x * ratioX, base.y * ratioY - 5);
-                }
-
-            });
+        ctx.font = "bold 25px Verdana";
+        for (let i = 0; i < bases.length; i++) {
+            let base = bases[i];
+            if (base.visible) {
+                ctx.fillText(base.name, iconX + base.x * ratioX, base.y * ratioY - 5);
+            }
+        }
 
         // Resources position
-        game.resources
-            .forEach(resource => {
-                if (resource.visible) {
-                    ctx.font = "bold 20px Verdana";
-                    ctx.beginPath();
-                    ctx.fillText(resource.name, 35 + resource.x * ratioX, resource.y * ratioY - 5);
-                }
-
-            });
+        ctx.font = "bold 20px Verdana";
+        for (let i = 0; i < resources.length; i++) {
+            let resource = resources[i];
+            if (resource.visible) {
+                ctx.fillText(resource.name, iconX + resource.x * ratioX, resource.y * ratioY - 5);
+            }
+        }
 
         // Rocket position
-        game.rockets.forEach(rocket => {
+        ctx.fillStyle = "rgb(255, 255, 50)";
+        for (let i = 0; i < rockets.length; i++) {
+            let rocket = rockets[i];
             ctx.beginPath();
-            ctx.fillStyle = "rgb(255, 255, 50)";
-            ctx.arc(50 + rocket.x * ratioX, 0 + rocket.y * ratioY, 5, 0, Math.PI * 2);
+            ctx.arc(originX + rocket.x * ratioX, rocket.y * ratioY, 5, 0, this.twoPi);
             ctx.fill();
-        });
+        }
         ctx.restore();
 
     }

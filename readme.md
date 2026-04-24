@@ -8,6 +8,16 @@
 
 <a href="https://santiherranz.github.io/RocketCargo/" target="_blank"><b>Play the latest version</b></a>
 
+<h2>Run locally</h2>
+<br>
+
+```sh
+npm install
+npm start
+```
+
+Open the local URL printed by Vite, usually <a href="http://127.0.0.1:5173/" target="_blank"><b>http://127.0.0.1:5173/</b></a>.
+
 <p align="left">  
   <b>Rocket Cargo</b> is an order delivery game with a rocket.
 

@@ -643,7 +643,7 @@ class Game {
         for (let i = 0; i < this.resources.length; i++) {
             let r = this.resources[i];
             if (r.name === resourceName) {
-                r.visible = true;
+                r.visible = !this.rocket.loaded || this.rocket.load !== resourceName;
                 r.animate = true;
                 break;
             }
