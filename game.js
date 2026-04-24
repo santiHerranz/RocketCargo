@@ -262,6 +262,8 @@ class Game {
             }
         }
 
+        this.refuelRocket();
+
         // Rocket can take away the resource if
         // - Is at place
         // - The resource at place is the goal of the mission

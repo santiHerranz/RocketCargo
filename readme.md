@@ -15,7 +15,7 @@
 
   <h2>Basic operation</h2>
   <br>
-- Press F to refuel the Rocket at fuel pump
+- Land at a fuel pump to refuel the Rocket automatically
   <br>
 - Press W or UP to thrust the rocket
   <br>

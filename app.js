@@ -87,10 +87,6 @@ var update = function (dt) {
 		game.moveRocket(+1);
 	}
 
-	if (input.refuel) {
-		game.refuelRocket();
-	}
-
 	game.step(dt);
 
 }
@@ -151,7 +147,6 @@ function onkeydown(evt) {
 	if (code == KEY.ENTER) input.enter = true;
 	if (code == KEY.H) input.help = true;
 	if (code == KEY.F1) input.help = true;
-	if (code == KEY.F) input.refuel = true;
 
 	// Once
 	if (code == KEY.N && input.new == input.state.RELEASED) input.new = input.state.ACTIVE;
@@ -176,7 +171,6 @@ function onkeyup(evt) {
 	if (code == KEY.ENTER) input.enter = false;
 	if (code == KEY.H) input.help = false;
 	if (code == KEY.F1) input.help = false;
-		if (code == KEY.F) input.refuel = false;
 
 	if (code == KEY.N) input.new = input.state.RELEASED;
 	if (code == KEY.M) input.model = input.state.RELEASED;

@@ -92,7 +92,7 @@ class Modal {
         spacer++;
 
         ctx.beginPath();
-        ctx.fillText("Press F to refuel the Rocket at base", 0, 0 + spacer++ * textSpacer);
+        ctx.fillText("Land at a fuel pump to refuel the Rocket automatically", 0, 0 + spacer++ * textSpacer);
         ctx.stroke();
         ctx.beginPath();
         ctx.fillText("Press W or UP to thrust the rocket", 0, 0 + spacer++ * textSpacer);
